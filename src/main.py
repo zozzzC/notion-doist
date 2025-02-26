@@ -15,7 +15,7 @@ def main():
     # try:
     with open((os.getcwd() + "/src/sample/doIstProject.json"), "r") as file:
         data = json.load(file)
-        syncProjects(api, data)
+        syncProjects(client, api, data)
     # except:
     #     print("Error reading JSON.")
 
