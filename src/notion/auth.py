@@ -8,4 +8,4 @@ def notionAuth() -> Client:
         notion = Client(auth=os.getenv("NOTION_TOKEN"))
         return notion
     except:
-        print("Notion Token is not initialized.")
+        print("Notion Token was not initialized.")

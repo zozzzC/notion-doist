@@ -8,4 +8,4 @@ def doIstAuth() -> TodoistAPI:
         api = TodoistAPI(os.getenv("TODOIST_TOKEN"))
         return api
     except:
-        print("Todoist Token is not initialized.")
+        print("Todoist Token was not initialized.")
