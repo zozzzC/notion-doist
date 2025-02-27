@@ -1,16 +1,30 @@
 from todoist_api_python.api import TodoistAPI
-from todoist_api_python.models import Project
+from todoist_api_python.models import Task
 from notion_client import Client
 import os
 import json
 from pprint import pprint
 
-type projectsType = dict[str, dict[str | None, str, bool, str]]
+type tasksType = dict[
+    str,
+    dict[
+        str,
+        str | None,
+        str,
+        str,
+        str | None,
+        bool,
+        list[str | None],
+        str | None,
+        int,
+        str,
+        bool,
+    ],
+]
 
 
-def syncTasks(client: Client, api: TodoistAPI, data: any):
-    tasks = api.get_tasks()
-    reformatted_tasks: dict[str : dict[tasks]] = {}
+def reformatTasks(tasks: list[Task]) -> dict[str : dict[tasksType]]:
+    reformatted_tasks: dict[str : dict[tasksType]] = {}
 
     for t in tasks:
         if t.due:
@@ -38,47 +52,51 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
         reformatted_tasks.get(t.id).update(reformatted_due)
 
         pprint(reformatted_tasks)
+        
+    return reformatted_tasks
 
 
-#     if len(data) == 0:
-#         with open(os.getcwd() + "/src/sample/doIstProject.json", "w") as f:
-#             print("Saving doIst projects...")
-#             json.dump(reformatted_projects, f)
-#             f.close()
-#     else:
-#         with open(os.getcwd() + "/src/sample/doIstProject.json", "r") as f:
-#             cache_projects: dict[str : dict[projectsType]] = json.load(f)
+def syncTasks(client: Client, api: TodoistAPI, data: any):
+    tasks: list[Task] = api.get_tasks()
+    reformatted_tasks = reformatTasks(tasks)
 
-#             # check for added and updated projects
-#             for p in reformatted_projects:
-#                 if p in cache_projects:
-#                     for label in cache_projects[p]:
-#                         # o is the name of the title EG: name, url, is_favourite
-#                         # cache_projects[p].get(o) is the name of the value EG: coding, http..., true
-#                         # print(o)
-#                         # print(cache_projects[p].get(o))
+    if len(data) == 0:
+        with open(os.getcwd() + "/src/sample/doIstTask.json", "w") as f:
+            print("Saving doIst tasks...")
+            json.dump(reformatted_tasks, f)
+            f.close()
+    else:
+        with open(os.getcwd() + "/src/sample/doIstProject.json", "r") as f:
+            cache_tasks: dict[str : dict[tasksType]] = json.load(f)
 
-#                         if cache_projects[p].get(label) != reformatted_projects[p].get(
-#                             label
-#                         ):
-#                             updateProjectInNotion(client, p, reformatted_projects)
-#                             break
-#                 else:
-#                     addProjectInNotion(p)
+            # check for added and updated projects
+            for t in reformatted_tasks:
+                if t in cache_tasks:
+                    for label in cache_tasks[t]:
+                        # o is the name of the title EG: name, url, is_favourite
+                        # cache_projects[p].get(o) is the name of the value EG: coding, http..., true
+                        # print(o)
+                        # print(cache_projects[p].get(o))
 
-#             # check for deleted projects
-#             for cp in cache_projects:
-#                 if cp not in reformatted_projects:
-#                     deleteProjectInNotion(p)
+                        if cache_tasks[t].get(label) != reformatted_tasks[t].get(label):
+                            updateProjectInNotion(client, t, reformatted_tasks)
+                            break
+                else:
+                    addProjectInNotion(t)
 
-
-# def updateProjectInNotion(client, p, reformatted_projects):
-#     print("update")
+            # check for deleted projects
+            for ct in cache_tasks:
+                if ct not in reformatted_tasks:
+                    deleteProjectInNotion(t)
 
 
-# def addProjectInNotion(client, p, reformatted_projectsp):
-#     print("add")
+def updateProjectInNotion(client, t, reformatted_projects):
+    print("Updating doIst task ")
 
 
-# def deleteProjectInNotion(client: Client, p):
-#     print("delete")
+def addProjectInNotion(client, p, reformatted_projectsp):
+    print("add")
+
+
+def deleteProjectInNotion(client: Client, p):
+    print("delete")

@@ -14,7 +14,7 @@ def main():
     api = doIstAuth()
 
     # try:
-    with open((os.getcwd() + "/src/sample/doIstProject.json"), "r") as file:
+    with open((os.getcwd() + "/src/sample/doIstTask.json"), "r") as file:
         data = json.load(file)
         syncTasks(client, api, data)
         # syncProjects(client, api, data)
