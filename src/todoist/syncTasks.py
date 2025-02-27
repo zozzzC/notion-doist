@@ -52,13 +52,13 @@ def reformatTasks(tasks: list[Task]) -> dict[str : dict[tasksType]]:
         reformatted_tasks.get(t.id).update(reformatted_due)
 
         pprint(reformatted_tasks)
-        
+
     return reformatted_tasks
 
 
 def syncTasks(client: Client, api: TodoistAPI, data: any):
     tasks: list[Task] = api.get_tasks()
-    reformatted_tasks = reformatTasks(tasks)
+    reformatted_tasks: dict[str : dict[tasksType]] = reformatTasks(tasks)
 
     if len(data) == 0:
         with open(os.getcwd() + "/src/sample/doIstTask.json", "w") as f:
@@ -79,7 +79,7 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
                         # print(cache_projects[p].get(o))
 
                         if cache_tasks[t].get(label) != reformatted_tasks[t].get(label):
-                            updateProjectInNotion(client, t, reformatted_tasks)
+                            updateTaskInNotion(client, t, reformatted_tasks)
                             break
                 else:
                     addProjectInNotion(t)
@@ -90,8 +90,9 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
                     deleteProjectInNotion(t)
 
 
-def updateProjectInNotion(client, t, reformatted_projects):
-    print("Updating doIst task ")
+def updateTaskInNotion(client, t, reformatted_tasks):
+    print("Updating doIst task into Notion...")
+     
 
 
 def addProjectInNotion(client, p, reformatted_projectsp):
