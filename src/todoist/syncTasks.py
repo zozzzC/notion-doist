@@ -90,16 +90,15 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
             deleteTaskInNotion(t)
 
     res = getProperties(
-        getResults(client.databases.query(**{"database_id": os.getenv("NOTION_DB_ID")}))
+        getResults(
+            client.databases.query(
+                **{
+                    "database_id": os.getenv("NOTION_DB_ID"),
+                    "filter": {"property": "Done", "checkbox": {"equals": True}},
+                }
+            )
+        )
     )
-
-    # res = client.databases.query(
-    #     **{
-    #         "database_id": os.getenv("NOTION_DB_ID"),
-    #     }
-    # )
-    # .get("results")[1]
-    # .get("properties")
 
     pprint(res)
 
@@ -110,6 +109,17 @@ def updateTaskInNotion(client, t, reformatted_tasks):
 
 def addTaskInNotion(client: Client, t, reformatted_tasks):
     print("Adding doIst task into Notion...")
+
+    res = getProperties(
+        getResults(
+            client.databases.query(
+                **{
+                    "database_id": os.getenv("NOTION_DB_ID"),
+                    "filter": {"property": "Done", "checkbox": {"equals": True}},
+                }
+            )
+        )
+    )
 
 
 def deleteTaskInNotion(client: Client, p):
