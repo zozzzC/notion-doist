@@ -34,6 +34,7 @@ def reformatTasks(tasks: list[Task]) -> dict[str : dict[tasksType]]:
                 "due": t.due.date,
                 "recurring": t.due.is_recurring,
                 "datetime": t.due.datetime,
+                "timezone": t.due.timezone,
             }
 
         reformatted_tasks.update(
