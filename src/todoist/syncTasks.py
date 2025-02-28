@@ -3,24 +3,30 @@ from todoist_api_python.models import Task
 from notion_client import Client
 import os
 import json
+
+from src.todoist.helpers import convertPriority, createNotionPage
+from src.todoist.helpers.calculateEndDate import calculateEndDate
 from .helpers.getProperties import getProperties, getResults
 from pprint import pprint
 from dotenv import load_dotenv
+from todoist.helpers import formatToDoIstDate
 
 type tasksType = dict[
     str,
     dict[
-        str,
-        str | None,
-        str,
-        str,
-        str | None,
-        bool,
-        list[str | None],
-        str | None,
-        int,
-        str,
-        bool,
+        "content":str,
+        "duration" : str | None,
+        "duration_unit" : str | None,
+        "datetime" : str | None,
+        "description":str,
+        "parent_id" : str | None,
+        "is_completed":bool,
+        "labels" : list[str | None],
+        "timezone" : str | None,
+        "priority":int,
+        "project_id" : str | None,
+        "due" : str | None,
+        "recurring":bool,
     ],
 ]
 
@@ -99,26 +105,54 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
         if ct not in reformatted_tasks:
             deleteTaskInNotion(t)
 
-    res = getProperties(
-        getResults(
-            client.databases.query(
-                **{
-                    "database_id": os.getenv("NOTION_DB_ID"),
-                    "filter": {"property": "Done", "checkbox": {"equals": True}},
-                }
-            )
-        )
-    )
-
-    pprint(res)
-
 
 def updateTaskInNotion(client, t, reformatted_tasks):
     print("Updating doIst task into Notion...")
 
 
-def addTaskInNotion(client: Client, t, reformatted_tasks):
+def addTaskInNotion(
+    client: Client,
+    t: dict[
+        "content":str,
+        "duration" : str | None,
+        "duration_unit" : str | None,
+        "datetime" : str | None,
+        "description":str,
+        "parent_id" : str | None,
+        "is_completed":bool,
+        "labels" : list[str | None],
+        "timezone" : str | None,
+        "priority":int,
+        "project_id" : str | None,
+        "due" : str | None,
+        "recurring":bool,
+    ],
+    reformatted_tasks: dict[str : dict[tasksType]],
+):
     print("Adding doIst task into Notion...")
+
+    print(reformatted_tasks[t])
+
+    task_properties = reformatted_tasks[t]
+    # task properties contains content, labels, description, project_id, etc
+
+    start_date = None
+    end_date = None
+
+    if t.get("due"):
+        start_date = task_properties.get("due")
+
+    if t.get("datetime"):
+        start_date = formatToDoIstDate(task_properties.get("datetime"))
+        end_date = calculateEndDate(
+            start_date,
+            task_properties.get("duration"),
+            task_properties.get("duration_unit"),
+        )
+
+    priority = convertPriority(t.get("priority"))
+    
+    createNotionPage(task_properties.get("content"), start_date, end_date, None, priority, lookupProject(task_properties.get("project_id"), lookupSection(task_properties.get("section_id"), task_properties.get("labels"))))
 
     # res = getProperties(
     #     getResults(
