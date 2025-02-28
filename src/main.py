@@ -14,15 +14,15 @@ def main():
     client = notionAuth()
     api = doIstAuth()
 
-    createNotionPage("me", client, api)
+    # createNotionPage("me", client, api)
 
-    # # try:
-    # with open((os.getcwd() + "/test/doIstTask.json"), "r") as file:
-    #     data = json.load(file)
-    #     syncTasks(client, api, data)
-    #     # syncProjects(client, api, data)
-    # # except:
-    # #     print("Error reading JSON.")
+    # try:
+    with open((os.getcwd() + "/test/doIstTask.json"), "r") as file:
+        data = json.load(file)
+        syncTasks(client, api, data)
+        # syncProjects(client, api, data)
+    # except:
+    #     print("Error reading JSON.")
 
 
 main()

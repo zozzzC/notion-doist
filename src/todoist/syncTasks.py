@@ -47,12 +47,21 @@ def reformatTasks(tasks: list[Task]) -> dict[str : dict[tasksType]]:
                     "project_id": t.project_id,
                     "labels": t.labels,
                     "priority": t.priority,
-                    "duration": t.duration,
                 }
             }
         )
 
         reformatted_tasks.get(t.id).update(reformatted_due)
+
+        if t.duration:
+            print(t.duration.amount)
+            duration = str(t.duration.amount)
+            duration_unit = str(t.duration.unit)
+            reformatted_duration = {
+                "duration": duration,
+                "duration_unit": duration_unit,
+            }
+            reformatted_tasks.get(t.id).update(reformatted_duration)
 
     return reformatted_tasks
 
@@ -111,16 +120,16 @@ def updateTaskInNotion(client, t, reformatted_tasks):
 def addTaskInNotion(client: Client, t, reformatted_tasks):
     print("Adding doIst task into Notion...")
 
-    res = getProperties(
-        getResults(
-            client.databases.query(
-                **{
-                    "database_id": os.getenv("NOTION_DB_ID"),
-                    "filter": {"property": "Done", "checkbox": {"equals": True}},
-                }
-            )
-        )
-    )
+    # res = getProperties(
+    #     getResults(
+    #         client.databases.query(
+    #             **{
+    #                 "database_id": os.getenv("NOTION_DB_ID"),
+    #                 "filter": {"property": "Done", "checkbox": {"equals": True}},
+    #             }
+    #         )
+    #     )
+    # )
 
 
 def deleteTaskInNotion(client: Client, p):
