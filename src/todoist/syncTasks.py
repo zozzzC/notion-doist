@@ -3,6 +3,7 @@ from todoist_api_python.models import Task
 from notion_client import Client
 import os
 import json
+from .helpers.getProperties import getProperties, getResults
 from pprint import pprint
 from dotenv import load_dotenv
 
@@ -87,6 +88,20 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
     for ct in cache_tasks:
         if ct not in reformatted_tasks:
             deleteTaskInNotion(t)
+
+    res = getProperties(
+        getResults(client.databases.query(**{"database_id": os.getenv("NOTION_DB_ID")}))
+    )
+
+    # res = client.databases.query(
+    #     **{
+    #         "database_id": os.getenv("NOTION_DB_ID"),
+    #     }
+    # )
+    # .get("results")[1]
+    # .get("properties")
+
+    pprint(res)
 
 
 def updateTaskInNotion(client, t, reformatted_tasks):
