@@ -3,6 +3,7 @@ from todoist_api_python.models import Task
 from notion_client import Client
 import os
 import json
+from src.todoist.helpers.checkForRelation import checkForRelation
 from src.todoist.helpers.convertPriority import convertPriority
 from src.todoist.helpers.createNotionPage import createNotionPage
 from src.todoist.helpers.lookupProject import lookupProject
