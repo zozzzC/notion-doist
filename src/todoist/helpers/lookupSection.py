@@ -1,4 +1,3 @@
-from src.notion.auth import notionAuth
 from src.todoist.auth import doIstAuth
 
 

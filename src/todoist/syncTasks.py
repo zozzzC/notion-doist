@@ -38,8 +38,6 @@ def reformatTasks(tasks: list[Task]) -> dict[str : dict[tasksType]]:
     reformatted_tasks: dict[str : dict[tasksType]] = {}
 
     for t in tasks:
-        pprint(t)
-
         reformatted_tasks.update(
             {
                 t.id: {
@@ -74,6 +72,9 @@ def reformatTasks(tasks: list[Task]) -> dict[str : dict[tasksType]]:
                 "duration_unit": duration_unit,
             }
             reformatted_tasks.get(t.id).update(reformatted_duration)
+
+        if t.parent_id:
+            reformatted_tasks.get(t.id).update({"parent_id": t.parent_id})
 
     return reformatted_tasks
 
@@ -110,6 +111,8 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
     for ct in cache_tasks:
         if ct not in reformatted_tasks:
             deleteTaskInNotion(t)
+            
+    checkForRelation(reformatted_tasks)
 
 
 def updateTaskInNotion(client, t, reformatted_tasks):
@@ -117,7 +120,6 @@ def updateTaskInNotion(client, t, reformatted_tasks):
 
 
 def addTaskInNotion(
-    client: Client,
     t: dict[
         "content":str,
         "duration" : str | None,
@@ -133,6 +135,7 @@ def addTaskInNotion(
         "section_id" : str | None,
         "due" : str | None,
         "recurring":bool,
+        "parent_id" : str | None
     ],
     reformatted_tasks: dict[str : dict[tasksType]],
 ):
