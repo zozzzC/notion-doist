@@ -1,9 +1,4 @@
-from syncTasks import tasksType
-
-
-def convertPriority(reformatted_doist_task: dict[tasksType]) -> str | None:
-    priority_number = reformatted_doist_task.get("priority")
-
+def convertPriority(priority_number: int) -> str | None:
     if priority_number == 4:
         return "High"
     elif priority_number == 3:

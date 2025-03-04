@@ -3,13 +3,16 @@ from todoist_api_python.models import Task
 from notion_client import Client
 import os
 import json
-
-from src.todoist.helpers import convertPriority, createNotionPage
+from src.todoist.helpers.convertPriority import convertPriority
+from src.todoist.helpers.createNotionPage import createNotionPage
+from src.todoist.helpers.lookupProject import lookupProject
+from src.todoist.helpers.lookupSection import lookupSection
 from src.todoist.helpers.calculateEndDate import calculateEndDate
 from .helpers.getProperties import getProperties, getResults
 from pprint import pprint
 from dotenv import load_dotenv
-from todoist.helpers import formatToDoIstDate
+from todoist.helpers.formatToDoIstDate import formatToDoIstDate
+from todoist.helpers.formatToDoIstDateTime import formatToDoIstDateTime
 
 type tasksType = dict[
     str,
@@ -35,13 +38,7 @@ def reformatTasks(tasks: list[Task]) -> dict[str : dict[tasksType]]:
     reformatted_tasks: dict[str : dict[tasksType]] = {}
 
     for t in tasks:
-        if t.due:
-            reformatted_due = {
-                "due": t.due.date,
-                "recurring": t.due.is_recurring,
-                "datetime": t.due.datetime,
-                "timezone": t.due.timezone,
-            }
+        pprint(t)
 
         reformatted_tasks.update(
             {
@@ -53,11 +50,20 @@ def reformatTasks(tasks: list[Task]) -> dict[str : dict[tasksType]]:
                     "project_id": t.project_id,
                     "labels": t.labels,
                     "priority": t.priority,
+                    "section_id": t.section_id,
                 }
             }
         )
 
-        reformatted_tasks.get(t.id).update(reformatted_due)
+        if t.due:
+            reformatted_due = {
+                "due": t.due.date,
+                "recurring": t.due.is_recurring,
+                "datetime": t.due.datetime,
+                "timezone": t.due.timezone,
+            }
+
+            reformatted_tasks.get(t.id).update(reformatted_due)
 
         if t.duration:
             print(t.duration.amount)
@@ -124,6 +130,7 @@ def addTaskInNotion(
         "timezone" : str | None,
         "priority":int,
         "project_id" : str | None,
+        "section_id" : str | None,
         "due" : str | None,
         "recurring":bool,
     ],
@@ -139,20 +146,42 @@ def addTaskInNotion(
     start_date = None
     end_date = None
 
-    if t.get("due"):
+    if task_properties.get("due"):
         start_date = task_properties.get("due")
 
-    if t.get("datetime"):
-        start_date = formatToDoIstDate(task_properties.get("datetime"))
+    if task_properties.get("datetime"):
+        start_date = formatToDoIstDateTime(task_properties.get("datetime"))
+
+    if task_properties.get("duration"):
         end_date = calculateEndDate(
             start_date,
             task_properties.get("duration"),
             task_properties.get("duration_unit"),
         )
 
-    priority = convertPriority(t.get("priority"))
-    
-    createNotionPage(task_properties.get("content"), start_date, end_date, None, priority, lookupProject(task_properties.get("project_id"), lookupSection(task_properties.get("section_id"), task_properties.get("labels"))))
+    priority = convertPriority(task_properties.get("priority"))
+    project = None
+    section = None
+
+    if task_properties.get("project_id") != None:
+        project = lookupProject(task_properties.get("project_id"))
+
+    if task_properties.get("section_id") != None:
+        section = lookupSection(
+            task_properties.get("section_id"),
+        )
+
+    createNotionPage(
+        t,
+        task_properties.get("content"),
+        start_date,
+        end_date,
+        None,
+        priority,
+        project,
+        section,
+        task_properties.get("labels"),
+    )
 
     # res = getProperties(
     #     getResults(

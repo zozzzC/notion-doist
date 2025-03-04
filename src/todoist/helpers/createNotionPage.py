@@ -7,9 +7,11 @@ import datetime
 
 from src.notion.auth import notionAuth
 from src.todoist.auth import doIstAuth
+from src.todoist.helpers.formatLabel import formatLabel
 
 
 def createNotionPage(
+    toDoIstId: str,
     name: str,
     date: datetime.datetime | None,
     end_date: datetime.datetime | None,
@@ -21,10 +23,10 @@ def createNotionPage(
 ):
 
     client = notionAuth()
-    api = doIstAuth()
 
     create = {
         "Name": {"title": [{"text": {"content": name}}]},
+        "ToDoistId": {"rich_text": [{"type": "text", "text": {"content": toDoIstId}}]},
         # "Deadline": {"date": {"end": None, "start": '', "time_zone": None}},
         # "Date": {"date": {"end": None, "start": '', "time_zone": None}},
         # "Priority Level": {"select": {"name": None}},
@@ -41,8 +43,6 @@ def createNotionPage(
 
     if date:
         if end_date:
-            create.update({"Date": {"date": {"start": str(date), "time_zone": None}}})
-        else:
             create.update(
                 {
                     "Date": {
@@ -54,7 +54,28 @@ def createNotionPage(
                     }
                 }
             )
+        else:
+            create.update({"Date": {"date": {"start": str(date), "time_zone": None}}})
+
+    if due:
+        create.update({"Deadline": {"date": {"start": str(date), "time_zone": None}}})
+
+    if priority:
+        create.update({"Priority Level": {"select": {"name": priority}}})
+
+    print(project)
+
+    if project:
+        create.update({"Project": {"select": {"name": project}}})
+
+    if section:
+        create.update({"Section": {"select": {"name": section}}})
+
+    if tag:
+        create.update({"Label": {"multi_select": formatLabel(tag)}})
 
     client.pages.create(
         parent={"database_id": os.getenv("NOTION_DB_ID")}, properties=create
     )
+
+    print("Successfully created Notion page for " + name)
