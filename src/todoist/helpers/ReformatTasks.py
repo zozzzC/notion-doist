@@ -5,6 +5,7 @@ class ReformatTasks:
 
     def __init__(self):
         self.reformatted_tasks: dict[str : dict[tasksType]] = {}
+        return self.reformatted_tasks
 
     def addIndividualTask(self, t: Task):
         self.reformatted_tasks.update(

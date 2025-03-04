@@ -3,6 +3,7 @@ from todoist_api_python.models import Task
 from notion_client import Client
 import os
 import json
+from src.todoist.helpers.ReformatTasks import ReformatTasks
 from src.todoist.helpers.checkForRelation import checkForRelation
 from src.todoist.helpers.convertPriority import convertPriority
 from src.todoist.helpers.createNotionPage import createNotionPage
@@ -35,54 +36,12 @@ type tasksType = dict[
 ]
 
 
-def reformatTasks(tasks: list[Task]) -> dict[str : dict[tasksType]]:
-    reformatted_tasks: dict[str : dict[tasksType]] = {}
-
-    for t in tasks:
-        reformatted_tasks.update(
-            {
-                t.id: {
-                    "is_completed": t.is_completed,
-                    "content": t.content,
-                    "description": t.description,
-                    "parent_id": t.parent_id,
-                    "project_id": t.project_id,
-                    "labels": t.labels,
-                    "priority": t.priority,
-                    "section_id": t.section_id,
-                }
-            }
-        )
-
-        if t.due:
-            reformatted_due = {
-                "due": t.due.date,
-                "recurring": t.due.is_recurring,
-                "datetime": t.due.datetime,
-                "timezone": t.due.timezone,
-            }
-
-            reformatted_tasks.get(t.id).update(reformatted_due)
-
-        if t.duration:
-            print(t.duration.amount)
-            duration = str(t.duration.amount)
-            duration_unit = str(t.duration.unit)
-            reformatted_duration = {
-                "duration": duration,
-                "duration_unit": duration_unit,
-            }
-            reformatted_tasks.get(t.id).update(reformatted_duration)
-
-        if t.parent_id:
-            reformatted_tasks.get(t.id).update({"parent_id": t.parent_id})
-
-    return reformatted_tasks
-
-
 def syncTasks(client: Client, api: TodoistAPI, data: any):
     tasks: list[Task] = api.get_tasks()
-    reformatted_tasks: dict[str : dict[tasksType]] = reformatTasks(tasks)
+    reformatted_tasks = ReformatTasks()
+    reformatted_tasks.reformatTasks(tasks)
+    global reformatted_relation_tasks
+    reformatted_relation_tasks = ReformatTasks()
 
     with open(os.getcwd() + "/test/doIstTask.json", "r") as f:
         cache_tasks: dict[str : dict[tasksType]] = json.load(f)
@@ -90,11 +49,11 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
     if len(data) == 0:
         with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
             print("Saving doIst tasks...")
-            json.dump(reformatted_tasks, f)
+            json.dump(reformatted_tasks.reformatted_tasks, f)
             f.close()
 
     # check for added and updated projects
-    for t in reformatted_tasks:
+    for t in reformatted_tasks.reformatted_tasks:
         if t in cache_tasks:
             for label in cache_tasks[t]:
                 # o is the name of the title EG: name, url, is_favourite
@@ -102,18 +61,20 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
                 # print(o)
                 # print(cache_projects[p].get(o))
 
-                if cache_tasks[t].get(label) != reformatted_tasks[t].get(label):
-                    updateTaskInNotion(client, t, reformatted_tasks)
+                if cache_tasks[t].get(label) != reformatted_tasks.reformatted_tasks[
+                    t
+                ].get(label):
+                    updateTaskInNotion(client, t, reformatted_tasks.reformatted_tasks)
                     break
         else:
-            addTaskInNotion(client, t, reformatted_tasks)
+            addTaskInNotion(client, t, reformatted_tasks.reformatted_tasks)
 
     # check for deleted tasks
     for ct in cache_tasks:
-        if ct not in reformatted_tasks:
+        if ct not in reformatted_tasks.reformatted_tasks:
             deleteTaskInNotion(t)
 
-    checkForRelation(reformatted_tasks)
+    checkForRelation(reformatted_relation_tasks.reformatted_tasks)
 
 
 def updateTaskInNotion(client, t, reformatted_tasks):
@@ -174,6 +135,9 @@ def addTaskInNotion(
         section = lookupSection(
             task_properties.get("section_id"),
         )
+
+    if task_properties.get("parent_id") != None:
+        reformatted_relation_tasks.addIndividualTask(t)
 
     createNotionPage(
         t,
