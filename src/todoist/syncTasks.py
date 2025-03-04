@@ -112,7 +112,7 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
     for ct in cache_tasks:
         if ct not in reformatted_tasks:
             deleteTaskInNotion(t)
-            
+
     checkForRelation(reformatted_tasks)
 
 
@@ -136,7 +136,7 @@ def addTaskInNotion(
         "section_id" : str | None,
         "due" : str | None,
         "recurring":bool,
-        "parent_id" : str | None
+        "parent_id" : str | None,
     ],
     reformatted_tasks: dict[str : dict[tasksType]],
 ):
