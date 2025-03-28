@@ -4,7 +4,7 @@ from notion_client import Client
 from queue import Queue
 import os
 import json
-from src.todoist.helpers.ReformatTasks import ReformatTasks, tasksType
+from src.todoist.helpers.ReformatTasks import ReformatTasks, tasksType, taskType
 from src.todoist.helpers.checkForRelation import checkForRelation
 from src.todoist.helpers.convertPriority import convertPriority
 from src.todoist.helpers.createNotionPage import createNotionPage
@@ -48,13 +48,15 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
                 if cache_tasks[t].get(label) != reformatted_tasks.reformatted_tasks[
                     t
                 ].get(label):
-                    updateTaskInNotion(client, t, reformatted_tasks.reformatted_tasks)
+                    updateTaskInNotion(
+                        t, reformatted_tasks.reformatted_tasks, cache_tasks
+                    )
                     break
         else:
             addTaskInNotion(t, reformatted_tasks.reformatted_tasks)
 
     # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
-    while require_relations.not_empty():
+    while not require_relations.empty():
         addTaskInNotion(require_relations.get(), reformatted_tasks.reformatted_tasks)
 
     # check for deleted tasks
@@ -65,11 +67,7 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
     checkForRelation(reformatted_relation_tasks.reformatted_tasks)
 
 
-def updateTaskInNotion(client, t, reformatted_tasks):
-    print("Updating doIst task into Notion...")
-
-
-def addTaskInNotion(
+def updateTaskInNotion(
     t: dict[
         "content":str,
         "duration" : str | None,
@@ -87,6 +85,25 @@ def addTaskInNotion(
         "recurring":bool,
         "parent_id" : str | None,
     ],
+    reformatted_tasks: dict[str : dict[tasksType]],
+    cache_tasks: dict[str : dict[tasksType]],
+):
+    print("Updating doIst task into Notion...")
+    
+    
+    
+
+    # cache_task_properties : dict[tasksType] = cache_tasks[t]
+    # task_properties : dict[tasksType] = reformatted_tasks[t]
+    # # task properties contains content, labels, description, project_id, etc
+
+    # #for each of the task properties, check which ones were changed
+    # for property in task_properties:
+    #     if task_properties[property] != cache_task_properties[property]:
+
+
+def addTaskInNotion(
+    t: dict[taskType],
     reformatted_tasks: dict[str : dict[tasksType]],
 ):
     print("Adding doIst task into Notion...")
@@ -142,6 +159,7 @@ def addTaskInNotion(
             project,
             section,
             task_properties.get("labels"),
+            None,
         )
 
     # res = getProperties(
