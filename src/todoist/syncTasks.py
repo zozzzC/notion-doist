@@ -3,7 +3,7 @@ from todoist_api_python.models import Task
 from notion_client import Client
 import os
 import json
-from src.todoist.helpers.ReformatTasks import ReformatTasks
+from src.todoist.helpers.ReformatTasks import ReformatTasks, tasksType
 from src.todoist.helpers.checkForRelation import checkForRelation
 from src.todoist.helpers.convertPriority import convertPriority
 from src.todoist.helpers.createNotionPage import createNotionPage
@@ -16,32 +16,15 @@ from dotenv import load_dotenv
 from todoist.helpers.formatToDoIstDate import formatToDoIstDate
 from todoist.helpers.formatToDoIstDateTime import formatToDoIstDateTime
 
-type tasksType = dict[
-    str,
-    dict[
-        "content":str,
-        "duration" : str | None,
-        "duration_unit" : str | None,
-        "datetime" : str | None,
-        "description":str,
-        "parent_id" : str | None,
-        "is_completed":bool,
-        "labels" : list[str | None],
-        "timezone" : str | None,
-        "priority":int,
-        "project_id" : str | None,
-        "due" : str | None,
-        "recurring":bool,
-    ],
-]
-
 
 def syncTasks(client: Client, api: TodoistAPI, data: any):
     tasks: list[Task] = api.get_tasks()
     reformatted_tasks = ReformatTasks()
     reformatted_tasks.reformatTasks(tasks)
-    global reformatted_relation_tasks
+    global reformatted_relation_tasks, require_relations
     reformatted_relation_tasks = ReformatTasks()
+    # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
+    require_relations = []
 
     with open(os.getcwd() + "/test/doIstTask.json", "r") as f:
         cache_tasks: dict[str : dict[tasksType]] = json.load(f)
@@ -67,7 +50,7 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
                     updateTaskInNotion(client, t, reformatted_tasks.reformatted_tasks)
                     break
         else:
-            addTaskInNotion(client, t, reformatted_tasks.reformatted_tasks)
+            addTaskInNotion(t, reformatted_tasks.reformatted_tasks)
 
     # check for deleted tasks
     for ct in cache_tasks:
@@ -103,8 +86,6 @@ def addTaskInNotion(
 ):
     print("Adding doIst task into Notion...")
 
-    print(reformatted_tasks[t])
-
     task_properties = reformatted_tasks[t]
     # task properties contains content, labels, description, project_id, etc
 
@@ -136,20 +117,27 @@ def addTaskInNotion(
             task_properties.get("section_id"),
         )
 
+    # TODO: this causes an error
     if task_properties.get("parent_id") != None:
-        reformatted_relation_tasks.addIndividualTask(t)
+        if reformatted_relation_tasks.idExists(task_properties.get("parent_id")):
+            require_relations.append(t)
+        # else:
+        # TODO: get the corresponding notion id and make it so that createNotionPage gets this id and uses it to make a relation.
 
-    createNotionPage(
-        t,
-        task_properties.get("content"),
-        start_date,
-        end_date,
-        None,
-        priority,
-        project,
-        section,
-        task_properties.get("labels"),
-    )
+        # if we have a parent id, we must try to get the value of that parent id and add the relation into notion, however, in the case that
+        # the parent task has not been made into notion yet, then we cannot get that ID yet. therefore, we need to add this task into a queue of tasks that require relations
+    else:
+        createNotionPage(
+            t,
+            task_properties.get("content"),
+            start_date,
+            end_date,
+            None,
+            priority,
+            project,
+            section,
+            task_properties.get("labels"),
+        )
 
     # res = getProperties(
     #     getResults(

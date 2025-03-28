@@ -20,6 +20,7 @@ def createNotionPage(
     project: str | None,
     section: str | None,
     tag: list[str] | None,
+    parent_id: str | None,
 ):
 
     client = notionAuth()
@@ -73,6 +74,9 @@ def createNotionPage(
 
     if tag:
         create.update({"Label": {"multi_select": formatLabel(tag)}})
+
+    if parent_id:
+        create.update({"Parent": [{"id": parent_id}]})
 
     client.pages.create(
         parent={"database_id": os.getenv("NOTION_DB_ID")}, properties=create

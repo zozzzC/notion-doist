@@ -1,13 +1,55 @@
-from src.todoist.syncTasks import tasksType, Task
+from todoist_api_python.models import Task
+import pprint
+
+type tasksType = dict[
+    str,
+    dict[
+        "content":str,
+        "duration" : str | None,
+        "duration_unit" : str | None,
+        "datetime" : str | None,
+        "description":str,
+        "parent_id" : str | None,
+        "is_completed":bool,
+        "labels" : list[str | None],
+        "timezone" : str | None,
+        "priority":int,
+        "project_id" : str | None,
+        "due" : str | None,
+        "recurring":bool,
+    ],
+]
+
+type taskType = dict[
+    "content":str,
+    "duration" : str | None,
+    "duration_unit" : str | None,
+    "datetime" : str | None,
+    "description":str,
+    "parent_id" : str | None,
+    "is_completed":bool,
+    "labels" : list[str | None],
+    "timezone" : str | None,
+    "priority":int,
+    "project_id" : str | None,
+    "section_id" : str | None,
+    "due" : str | None,
+    "recurring":bool,
+    "parent_id" : str | None,
+]
 
 
 class ReformatTasks:
 
     def __init__(self):
         self.reformatted_tasks: dict[str : dict[tasksType]] = {}
+
+    def getReformattedTasks(self):
         return self.reformatted_tasks
 
     def addIndividualTask(self, t: Task):
+        pprint.pprint(t)
+
         self.reformatted_tasks.update(
             {
                 t.id: {
@@ -51,3 +93,9 @@ class ReformatTasks:
             self.addIndividualTask(t)
 
         return self.reformatted_tasks
+
+    def idExists(self, id: str) -> bool:
+        if self.reformatted_tasks.get(id):
+            return True
+
+        return False
