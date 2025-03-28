@@ -1,6 +1,7 @@
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Task
 from notion_client import Client
+from queue import Queue
 import os
 import json
 from src.todoist.helpers.ReformatTasks import ReformatTasks, tasksType
@@ -24,7 +25,7 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
     global reformatted_relation_tasks, require_relations
     reformatted_relation_tasks = ReformatTasks()
     # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
-    require_relations = []
+    require_relations = Queue()
 
     with open(os.getcwd() + "/test/doIstTask.json", "r") as f:
         cache_tasks: dict[str : dict[tasksType]] = json.load(f)
@@ -51,6 +52,10 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
                     break
         else:
             addTaskInNotion(t, reformatted_tasks.reformatted_tasks)
+
+    # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
+    while require_relations.not_empty():
+        addTaskInNotion(require_relations.get(), reformatted_tasks.reformatted_tasks)
 
     # check for deleted tasks
     for ct in cache_tasks:
