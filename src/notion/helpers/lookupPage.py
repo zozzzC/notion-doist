@@ -1,32 +1,28 @@
 from src.notion.auth import notionAuth
 import os
 from dotenv import load_dotenv
-from src.todoist.helpers import getProperties
+from src.todoist.helpers.getProperties import getProperties, getResults
 from pprint import pprint
 
 
-def lookupPage(id: str, propertyName: str):
+def lookupPageByTodoistId(todoistId: str):
     client = notionAuth()
 
     try:
         res = getProperties(
-            getProperties.getResults(
+            getResults(
                 client.databases.query(
                     **{
                         "database_id": os.getenv("NOTION_DB_ID"),
                         "filter": {
-                            "property": propertyName,
-                            "title": [{"text": {"content": id}}],
+                            "property": "ToDoistId",
+                            "rich_text": {"contains": todoistId},
                         },
                     }
                 )
             )
         )
 
-        pprint(res)
-
-        return res
+        return list(res.keys())[0]
     except:
-        raise Exception(
-            "Cannot find page with ID " + id + " for property " + propertyName
-        )
+        raise Exception("Cannot find page with Todoist ID " + todoistId)

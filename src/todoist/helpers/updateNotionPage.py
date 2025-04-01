@@ -4,6 +4,7 @@ from notion_client import Client
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Task
 import datetime
+from pprint import pprint
 
 from src.notion.auth import notionAuth
 from src.todoist.auth import doIstAuth
@@ -21,13 +22,13 @@ def updateNotionPage(
     section: str | None,
     tag: list[str] | None,
     parent_id: str | None,
+    notion_id: str,
 ):
 
     client = notionAuth()
 
     create = {
         "Name": {"title": [{"text": {"content": name}}]},
-        "ToDoistId": {"rich_text": [{"type": "text", "text": {"content": toDoIstId}}]},
         # "Deadline": {"date": {"end": None, "start": '', "time_zone": None}},
         # "Date": {"date": {"end": None, "start": '', "time_zone": None}},
         # "Priority Level": {"select": {"name": None}},
@@ -78,8 +79,6 @@ def updateNotionPage(
     if parent_id:
         create.update({"Parent": [{"id": parent_id}]})
 
-    client.pages.update(
-        parent={"database_id": os.getenv("NOTION_DB_ID")}, properties=create
-    )
+    client.pages.update({"page_id": notion_id, "properties": create,})
 
     print("Successfully updated Notion page for " + name)

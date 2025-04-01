@@ -16,6 +16,8 @@ from pprint import pprint
 from dotenv import load_dotenv
 from todoist.helpers.formatToDoIstDate import formatToDoIstDate
 from todoist.helpers.formatToDoIstDateTime import formatToDoIstDateTime
+from src.notion.helpers.lookupPage import lookupPageByTodoistId
+from todoist.helpers.updateNotionPage import updateNotionPage
 
 
 def syncTasks(client: Client, api: TodoistAPI, data: any):
@@ -30,6 +32,8 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
     with open(os.getcwd() + "/test/doIstTask.json", "r") as f:
         cache_tasks: dict[str : dict[tasksType]] = json.load(f)
 
+    # TODO: remove this length, since you will need to save the new sync into the cache
+    # And you already got the previous tasks in the method above
     if len(data) == 0:
         with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
             print("Saving doIst tasks...")
@@ -48,9 +52,10 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
                 if cache_tasks[t].get(label) != reformatted_tasks.reformatted_tasks[
                     t
                 ].get(label):
-                    updateTaskInNotion(
-                        t, reformatted_tasks.reformatted_tasks, cache_tasks
-                    )
+                    print(label)
+                    print(cache_tasks[t].get(label))
+                    print(reformatted_tasks.reformatted_tasks[t].get(label))
+                    updateTaskInNotion(t, reformatted_tasks.reformatted_tasks)
                     break
         else:
             addTaskInNotion(t, reformatted_tasks.reformatted_tasks)
@@ -86,12 +91,61 @@ def updateTaskInNotion(
         "parent_id" : str | None,
     ],
     reformatted_tasks: dict[str : dict[tasksType]],
-    cache_tasks: dict[str : dict[tasksType]],
 ):
     print("Updating doIst task into Notion...")
-    
-    
-    
+
+    task_properties = reformatted_tasks[t]
+    # task properties contains content, labels, description, project_id, etc
+
+    start_date = None
+    end_date = None
+
+    if task_properties.get("due"):
+        start_date = task_properties.get("due")
+
+    if task_properties.get("datetime"):
+        start_date = formatToDoIstDateTime(task_properties.get("datetime"))
+
+    if task_properties.get("duration"):
+        end_date = calculateEndDate(
+            start_date,
+            task_properties.get("duration"),
+            task_properties.get("duration_unit"),
+        )
+
+    priority = convertPriority(task_properties.get("priority"))
+    project = None
+    section = None
+
+    if task_properties.get("project_id") != None:
+        project = lookupProject(task_properties.get("project_id"))
+
+    if task_properties.get("section_id") != None:
+        section = lookupSection(
+            task_properties.get("section_id"),
+        )
+
+    notionParentPageId = None
+
+    if task_properties.get("parent_id") != None:
+        # TODO: please check if this works.
+        notionParentPageId = lookupPageByTodoistId(task_properties.get("parent_id"))
+
+    notionPageId = lookupPageByTodoistId(t)
+
+    updateNotionPage(
+        t,
+        task_properties.get("content"),
+        start_date,
+        end_date,
+        None,
+        priority,
+        project,
+        section,
+        task_properties.get("labels"),
+        notionParentPageId,
+        notionPageId
+    )
 
     # cache_task_properties : dict[tasksType] = cache_tasks[t]
     # task_properties : dict[tasksType] = reformatted_tasks[t]
@@ -143,7 +197,9 @@ def addTaskInNotion(
     if task_properties.get("parent_id") != None:
         if reformatted_relation_tasks.idExists(task_properties.get("parent_id")):
             require_relations.append(t)
-        # else:
+        else:
+            lookupPageByTodoistId(task_properties.get("parent_id"))
+
         # TODO: get the corresponding notion id and make it so that createNotionPage gets this id and uses it to make a relation.
 
         # if we have a parent id, we must try to get the value of that parent id and add the relation into notion, however, in the case that
