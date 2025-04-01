@@ -79,6 +79,10 @@ def updateNotionPage(
     if parent_id:
         create.update({"Parent": [{"id": parent_id}]})
 
-    client.pages.update({"page_id": notion_id, "properties": create,})
+    pprint({"page_id": notion_id, "properties": create})
+    client.pages.update(
+        page_id=notion_id,
+        properties=create,
+    )
 
     print("Successfully updated Notion page for " + name)
