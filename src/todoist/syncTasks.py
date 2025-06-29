@@ -19,8 +19,9 @@ from todoist.helpers.formatToDoIstDateTime import formatToDoIstDateTime
 from src.notion.helpers.lookupPageByTodoistId import lookupPageByTodoistId
 from todoist.helpers.updateNotionPage import updateNotionPage
 from datetime import date, datetime, timedelta
-from src.todoist.helpers import completeNotionPage
+from src.todoist.helpers.completeNotionPage import completeNotionPage
 from src.todoist.helpers.changeTimezone import changeTimezone
+from src.todoist.helpers.formatTaskForCreateUpdate import formatTaskForCreateUpdate
 
 
 def syncTasks(client: Client, api: TodoistAPI, data: any):
@@ -94,13 +95,12 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
 
     # check for deleted tasks
     for ct in cache_tasks:
-        if ct not in new_tasks.reformatted:
-            print("Task " + cache_tasks[ct].get("content") + " was deleted.")
-            deleteTaskInNotion(ct)
-        elif ct in completed_tasks.reformatted:
+        if ct in completed_tasks.reformatted:
             print("Task " + cache_tasks[ct].get("content") + " was completed.")
             completeTaskInNotion(ct)
-
+        elif ct not in new_tasks.reformatted:
+            print("Task " + cache_tasks[ct].get("content") + " was deleted.")
+            deleteTaskInNotion(ct)
     checkForRelation(reformatted_relation_tasks.reformatted)
 
     with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
@@ -131,82 +131,7 @@ def updateTaskInNotion(
 ):
     print("Updating doIst task into Notion...")
 
-    task_properties = reformatted_tasks[t]
-    # task properties contains content, labels, description, project_id, etc
-
-    print(task_properties.get("parent_id"))
-    if task_properties.get("parent_id") != None:
-        # TODO: test if working.
-        notionParentPageId = lookupPageByTodoistId(task_properties.get("parent_id"))
-        if notionParentPageId == None:
-            # we can try to see if the parent id is in notion.
-            # but if it is not in notion, then in that case we don't have the associated notion ID yet.
-            # thus we have to put this into our required relations queue.
-            print(
-                "doIst task ID:"
-                + t
-                + " "
-                + task_properties.get("content")
-                + "pushed onto require relations queue."
-            )
-            require_relations.put(t)
-            return
-
-    start_date = None
-    end_date = None
-
-    if task_properties.get("due"):
-        start_date = changeTimezone(task_properties.get("due"))
-        time_zone = task_properties.get("timezone")
-
-    if task_properties.get("datetime"):
-        start_date = changeTimezone(task_properties.get("datetime"))
-
-    if task_properties.get("duration"):
-        end_date = calculateEndDate(
-            start_date,
-            task_properties.get("duration"),
-            task_properties.get("duration_unit"),
-        )
-
-    priority = convertPriority(task_properties.get("priority"))
-    project = None
-    section = None
-
-    if task_properties.get("project_id") != None:
-        project = lookupProject(task_properties.get("project_id"))
-
-    if task_properties.get("section_id") != None:
-        section = lookupSection(
-            task_properties.get("section_id"),
-        )
-
-    notionParentPageId = None
-
-    notionPageId = lookupPageByTodoistId(t)
-
-    updateNotionPage(
-        t,
-        task_properties.get("content"),
-        start_date,
-        end_date,
-        time_zone,
-        None,
-        priority,
-        project,
-        section,
-        task_properties.get("labels"),
-        notionParentPageId,
-        notionPageId,
-    )
-
-    # cache_task_properties : dict[tasksType] = cache_tasks[t]
-    # task_properties : dict[tasksType] = reformatted_tasks[t]
-    # # task properties contains content, labels, description, project_id, etc
-
-    # #for each of the task properties, check which ones were changed
-    # for property in task_properties:
-    #     if task_properties[property] != cache_task_properties[property]:
+    formatTaskForCreateUpdate(t, reformatted_tasks, require_relations, False)
 
 
 def addTaskInNotion(
@@ -215,74 +140,7 @@ def addTaskInNotion(
 ):
     print("Adding doIst task into Notion...")
 
-    task_properties = reformatted_tasks[t]
-    # task properties contains content, labels, description, project_id, etc
-
-    start_date = None
-    end_date = None
-    time_zone = "Pacific/Auckland"
-
-    if task_properties.get("due"):
-        doIstDateTime = task_properties.get("due")
-        start_date = changeTimezone(doIstDateTime)
-
-    if task_properties.get("datetime"):
-        doIstDateTime = task_properties.get("datetime")
-        start_date = changeTimezone(doIstDateTime)
-
-    if task_properties.get("duration"):
-        end_date = calculateEndDate(
-            start_date,
-            task_properties.get("duration"),
-            task_properties.get("duration_unit"),
-        )
-
-    priority = convertPriority(task_properties.get("priority"))
-    project = None
-    section = None
-
-    if task_properties.get("project_id") != None:
-        project = lookupProject(task_properties.get("project_id"))
-
-    if task_properties.get("section_id") != None:
-        section = lookupSection(
-            task_properties.get("section_id"),
-        )
-
-    parent_id = None
-
-    if task_properties.get("parent_id") != None:
-        if lookupPageByTodoistId(task_properties.get("parent_id")) == None:
-            require_relations.put(t)
-            print("pushing into require_relations")
-            return
-        else:
-            parent_id = lookupPageByTodoistId(task_properties.get("parent_id"))
-
-    createNotionPage(
-        t,
-        task_properties.get("content"),
-        start_date,
-        end_date,
-        time_zone,
-        None,
-        priority,
-        project,
-        section,
-        task_properties.get("labels"),
-        parent_id,
-    )
-
-    # res = getProperties(
-    #     getResults(
-    #         client.databases.query(
-    #             **{
-    #                 "database_id": os.getenv("NOTION_DB_ID"),
-    #                 "filter": {"property": "Done", "checkbox": {"equals": True}},
-    #             }
-    #         )
-    #     )
-    # )
+    formatTaskForCreateUpdate(t, reformatted_tasks, require_relations, True)
 
 
 def deleteTaskInNotion(t: dict[taskType]):
