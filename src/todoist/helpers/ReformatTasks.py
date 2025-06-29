@@ -42,15 +42,15 @@ type taskType = dict[
 class ReformatTasks:
 
     def __init__(self):
-        self.reformatted_tasks: dict[str : dict[tasksType]] = {}
+        self.reformatted: dict[str : dict[tasksType]] = {}
 
     def getReformattedTasks(self):
-        return self.reformatted_tasks
+        return self.reformatted
 
     def addIndividualTask(self, t: Task):
         pprint.pprint(t)
 
-        self.reformatted_tasks.update(
+        self.reformatted.update(
             {
                 t.id: {
                     "is_completed": t.is_completed,
@@ -73,7 +73,7 @@ class ReformatTasks:
                 "timezone": t.due.timezone,
             }
 
-            self.reformatted_tasks.get(t.id).update(reformatted_due)
+            self.reformatted.get(t.id).update(reformatted_due)
 
         if t.duration:
             print(t.duration.amount)
@@ -83,19 +83,19 @@ class ReformatTasks:
                 "duration": duration,
                 "duration_unit": duration_unit,
             }
-            self.reformatted_tasks.get(t.id).update(reformatted_duration)
+            self.reformatted.get(t.id).update(reformatted_duration)
 
         if t.parent_id:
-            self.reformatted_tasks.get(t.id).update({"parent_id": t.parent_id})
+            self.reformatted.get(t.id).update({"parent_id": t.parent_id})
 
     def reformatTasks(self, tasks: list[Task]) -> dict[str : dict[tasksType]]:
         for t in tasks:
             self.addIndividualTask(t)
 
-        return self.reformatted_tasks
+        return self.reformatted
 
     def idExists(self, id: str) -> bool:
-        if self.reformatted_tasks.get(id):
+        if self.reformatted.get(id):
             return True
 
         return False

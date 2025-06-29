@@ -4,7 +4,7 @@ from notion_client import Client
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Task
 import datetime
-
+import pprint
 from src.notion.auth import notionAuth
 from src.todoist.auth import doIstAuth
 from src.todoist.helpers.formatLabel import formatLabel
@@ -76,7 +76,8 @@ def createNotionPage(
         create.update({"Label": {"multi_select": formatLabel(tag)}})
 
     if parent_id:
-        create.update({"Parent": [{"id": parent_id}]})
+        create.update({"Parent": {"type": "relation", "relation": [{"id": parent_id}]}})
+        pprint.pprint(create)
 
     client.pages.create(
         parent={"database_id": os.getenv("NOTION_DB_ID")}, properties=create
