@@ -5,6 +5,7 @@ from queue import Queue
 import os
 import json
 from src.todoist.helpers.ReformatTasks import ReformatTasks, tasksType, taskType
+from src.todoist.helpers.deleteNotionPage import deleteNotionPage
 from src.todoist.helpers.checkForRelation import checkForRelation
 from src.todoist.helpers.convertPriority import convertPriority
 from src.todoist.helpers.createNotionPage import createNotionPage
@@ -16,7 +17,7 @@ from pprint import pprint
 from dotenv import load_dotenv
 from todoist.helpers.formatToDoIstDate import formatToDoIstDate
 from todoist.helpers.formatToDoIstDateTime import formatToDoIstDateTime
-from src.notion.helpers.lookupPage import lookupPageByTodoistId
+from src.notion.helpers.lookupPageByTodoistId import lookupPageByTodoistId
 from todoist.helpers.updateNotionPage import updateNotionPage
 
 
@@ -28,9 +29,6 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
     reformatted_relation_tasks = ReformatTasks()
     # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
     require_relations = Queue()
-
-    # TODO: remove this length, since you will need to save the new sync into the cache
-    # And you already got the previous tasks in the method above
 
     with open(os.getcwd() + "/test/doIstTask.json", "r") as f:
         cache_tasks: dict[str : dict[tasksType]] = json.load(f)
@@ -52,43 +50,52 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
                 # print(cache_projects[p].get(o))
 
                 if cache_tasks[t].get(label) != new_tasks.reformatted[t].get(label):
-                    # print(label)
-                    # print(cache_tasks[t].get(label))
-                    # print(new_tasks.reformatted[t].get(label))
+                    print(label)
+                    print(cache_tasks[t].get(label))
+                    print(new_tasks.reformatted[t].get(label))
                     updateTaskInNotion(t, new_tasks.reformatted)
                     break
         else:
             addTaskInNotion(t, new_tasks.reformatted)
 
-    # # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
-    # while not require_relations.empty():
-    #     #determine if the task already exits in cache
-    #     taskWithRelation : dict[
-    #     "content":str,
-    #     "duration" : str | None,
-    #     "duration_unit" : str | None,
-    #     "datetime" : str | None,
-    #     "description":str,
-    #     "parent_id" : str | None,
-    #     "is_completed":bool,
-    #     "labels" : list[str | None],
-    #     "timezone" : str | None,
-    #     "priority":int,
-    #     "project_id" : str | None,
-    #     "section_id" : str | None,
-    #     "due" : str | None,
-    #     "recurring":bool,
-    #     "parent_id" : str | None,
-    # ] = require_relations.get();
+    # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
+    while not require_relations.empty():
+        # determine if the task already exits in cache
+        taskWithRelation: dict[
+            "content":str,
+            "duration" : str | None,
+            "duration_unit" : str | None,
+            "datetime" : str | None,
+            "description":str,
+            "parent_id" : str | None,
+            "is_completed":bool,
+            "labels" : list[str | None],
+            "timezone" : str | None,
+            "priority":int,
+            "project_id" : str | None,
+            "section_id" : str | None,
+            "due" : str | None,
+            "recurring":bool,
+            "parent_id" : str | None,
+        ] = require_relations.get()
 
-    #     addTaskInNotion(require_relations.get(), new_tasks.reformatted)
+        if taskWithRelation in cache_tasks:
+            updateTaskInNotion(taskWithRelation, new_tasks.reformatted)
+        else:
+            addTaskInNotion(taskWithRelation, new_tasks.reformatted)
 
-    # # check for deleted tasks
-    # for ct in cache_tasks:
-    #     if ct not in new_tasks.reformatted:
-    #         deleteTaskInNotion(t)
+    # check for deleted tasks
+    for ct in cache_tasks:
+        if ct not in new_tasks.reformatted:
+            print("Task " + cache_tasks[ct].get("content") + " was deleted.")
+            deleteTaskInNotion(ct)
 
-    # checkForRelation(reformatted_relation_tasks.reformatted)
+    checkForRelation(reformatted_relation_tasks.reformatted)
+
+    with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
+        print("Saving doIst tasks...")
+        json.dump(new_tasks.reformatted, f)
+        f.close()
 
 
 def updateTaskInNotion(
@@ -261,5 +268,5 @@ def addTaskInNotion(
     # )
 
 
-def deleteTaskInNotion(client: Client, p):
-    print("delete")
+def deleteTaskInNotion(t: dict[taskType]):
+    deleteNotionPage(lookupPageByTodoistId(t))
