@@ -5,7 +5,6 @@ from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Task
 import datetime
 from pprint import pprint
-
 from src.notion.auth import notionAuth
 from src.todoist.auth import doIstAuth
 from src.todoist.helpers.formatLabel import formatLabel
@@ -16,6 +15,7 @@ def updateNotionPage(
     name: str,
     date: datetime.datetime | None,
     end_date: datetime.datetime | None,
+    time_zone: str,
     due: datetime.datetime | None,
     priority: str | None,
     project: str | None,
@@ -39,7 +39,7 @@ def updateNotionPage(
                         "date": {
                             "end": str(end_date),
                             "start": str(date),
-                            "time_zone": None,
+                            "time_zone": time_zone,
                         }
                     }
                 }
@@ -68,6 +68,18 @@ def updateNotionPage(
         create.update({"Parent": [{"id": parent_id}]})
 
     pprint({"page_id": notion_id, "properties": create})
+
+    if notion_id == None:
+        # then the associated task was alredy deleted in notion, so don't bother updating it.
+        print(
+            "Notion page with ToDoIst ID:"
+            + toDoIstId
+            + " Name:"
+            + name
+            + " was already deleted."
+        )
+        return
+
     client.pages.update(
         page_id=notion_id,
         properties=create,

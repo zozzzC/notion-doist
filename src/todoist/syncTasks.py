@@ -15,16 +15,24 @@ from src.todoist.helpers.calculateEndDate import calculateEndDate
 from .helpers.getProperties import getProperties, getResults
 from pprint import pprint
 from dotenv import load_dotenv
-from todoist.helpers.formatToDoIstDate import formatToDoIstDate
 from todoist.helpers.formatToDoIstDateTime import formatToDoIstDateTime
 from src.notion.helpers.lookupPageByTodoistId import lookupPageByTodoistId
 from todoist.helpers.updateNotionPage import updateNotionPage
+from datetime import date, datetime, timedelta
+from src.todoist.helpers import completeNotionPage
+from src.todoist.helpers.changeTimezone import changeTimezone
 
 
 def syncTasks(client: Client, api: TodoistAPI, data: any):
-    tasks: list[Task] = api.get_tasks()
+    tasks = api.get_tasks()
+    completed_t = api.get_completed_tasks_by_completion_date(
+        since=(datetime.now() - timedelta(days=1)), until=(datetime.now())
+    )
+    completed_tasks = ReformatTasks()
+    completed_tasks.reformatTasks(completed_t)
     new_tasks = ReformatTasks()
     new_tasks.reformatTasks(tasks)
+
     global reformatted_relation_tasks, require_relations
     reformatted_relation_tasks = ReformatTasks()
     # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
@@ -89,6 +97,9 @@ def syncTasks(client: Client, api: TodoistAPI, data: any):
         if ct not in new_tasks.reformatted:
             print("Task " + cache_tasks[ct].get("content") + " was deleted.")
             deleteTaskInNotion(ct)
+        elif ct in completed_tasks.reformatted:
+            print("Task " + cache_tasks[ct].get("content") + " was completed.")
+            completeTaskInNotion(ct)
 
     checkForRelation(reformatted_relation_tasks.reformatted)
 
@@ -145,10 +156,11 @@ def updateTaskInNotion(
     end_date = None
 
     if task_properties.get("due"):
-        start_date = task_properties.get("due")
+        start_date = changeTimezone(task_properties.get("due"))
+        time_zone = task_properties.get("timezone")
 
     if task_properties.get("datetime"):
-        start_date = formatToDoIstDateTime(task_properties.get("datetime"))
+        start_date = changeTimezone(task_properties.get("datetime"))
 
     if task_properties.get("duration"):
         end_date = calculateEndDate(
@@ -178,6 +190,7 @@ def updateTaskInNotion(
         task_properties.get("content"),
         start_date,
         end_date,
+        time_zone,
         None,
         priority,
         project,
@@ -207,12 +220,15 @@ def addTaskInNotion(
 
     start_date = None
     end_date = None
+    time_zone = "Pacific/Auckland"
 
     if task_properties.get("due"):
-        start_date = task_properties.get("due")
+        doIstDateTime = task_properties.get("due")
+        start_date = changeTimezone(doIstDateTime)
 
     if task_properties.get("datetime"):
-        start_date = formatToDoIstDateTime(task_properties.get("datetime"))
+        doIstDateTime = task_properties.get("datetime")
+        start_date = changeTimezone(doIstDateTime)
 
     if task_properties.get("duration"):
         end_date = calculateEndDate(
@@ -248,6 +264,7 @@ def addTaskInNotion(
         task_properties.get("content"),
         start_date,
         end_date,
+        time_zone,
         None,
         priority,
         project,
@@ -270,3 +287,7 @@ def addTaskInNotion(
 
 def deleteTaskInNotion(t: dict[taskType]):
     deleteNotionPage(lookupPageByTodoistId(t))
+
+
+def completeTaskInNotion(t: dict[taskType]):
+    completeNotionPage(lookupPageByTodoistId(t))

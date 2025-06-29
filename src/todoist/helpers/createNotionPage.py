@@ -15,6 +15,7 @@ def createNotionPage(
     name: str,
     date: datetime.datetime | None,
     end_date: datetime.datetime | None,
+    time_zone: str,
     due: datetime.datetime | None,
     priority: str | None,
     project: str | None,
@@ -42,6 +43,9 @@ def createNotionPage(
         # },
     }
 
+    print("Timezone:")
+    print(time_zone)
+
     if date:
         if end_date:
             create.update(
@@ -50,7 +54,7 @@ def createNotionPage(
                         "date": {
                             "end": str(end_date),
                             "start": str(date),
-                            "time_zone": None,
+                            "time_zone": time_zone,
                         }
                     }
                 }
@@ -77,7 +81,6 @@ def createNotionPage(
 
     if parent_id:
         create.update({"Parent": {"type": "relation", "relation": [{"id": parent_id}]}})
-        pprint.pprint(create)
 
     client.pages.create(
         parent={"database_id": os.getenv("NOTION_DB_ID")}, properties=create

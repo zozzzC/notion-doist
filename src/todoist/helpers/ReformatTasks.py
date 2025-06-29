@@ -1,5 +1,6 @@
 from todoist_api_python.models import Task
 import pprint
+from typing import Iterator
 
 type tasksType = dict[
     str,
@@ -48,8 +49,6 @@ class ReformatTasks:
         return self.reformatted
 
     def addIndividualTask(self, t: Task):
-        pprint.pprint(t)
-
         self.reformatted.update(
             {
                 t.id: {
@@ -67,10 +66,10 @@ class ReformatTasks:
 
         if t.due:
             reformatted_due = {
-                "due": t.due.date,
+                "due": t.due.date.isoformat(),
                 "recurring": t.due.is_recurring,
-                "datetime": t.due.datetime,
-                "timezone": t.due.timezone,
+                "datetime": t.due.date.isoformat(),
+                "timezone": "Pacific/Auckland",
             }
 
             self.reformatted.get(t.id).update(reformatted_due)
@@ -88,10 +87,11 @@ class ReformatTasks:
         if t.parent_id:
             self.reformatted.get(t.id).update({"parent_id": t.parent_id})
 
-    def reformatTasks(self, tasks: list[Task]) -> dict[str : dict[tasksType]]:
-        for t in tasks:
+    def reformatTasks(self, tasks: Iterator[list[Task]]) -> dict[str : dict[tasksType]]:
+        for t in next(tasks):
             self.addIndividualTask(t)
 
+        pprint.pprint(self.reformatted)
         return self.reformatted
 
     def idExists(self, id: str) -> bool:
