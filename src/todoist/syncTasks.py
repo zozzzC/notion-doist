@@ -24,7 +24,7 @@ from src.todoist.helpers.changeTimezone import changeTimezone
 from src.todoist.helpers.formatTaskForCreateUpdate import formatTaskForCreateUpdate
 
 
-def syncTasks(client: Client, api: TodoistAPI, data: any):
+def syncTasks(api: TodoistAPI, data: any):
     tasks = api.get_tasks()
     completed_t = api.get_completed_tasks_by_completion_date(
         since=(datetime.now() - timedelta(days=1)), until=(datetime.now())

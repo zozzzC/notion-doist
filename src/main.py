@@ -6,6 +6,7 @@ from src.todoist.helpers.createNotionPage import createNotionPage
 from src.todoist.helpers.getProperties import getProperties, getResults
 from todoist.auth import doIstAuth
 from __init__ import __init__
+from src.notion.syncPages import syncPages
 
 from todoist.syncTasks import syncTasks
 import json
@@ -33,7 +34,8 @@ def main():
     # try:
     with open((os.getcwd() + "/test/doIstTask.json"), "r") as file:
         data = json.load(file)
-        syncTasks(client, api, data)
+        # syncTasks(api, data)
+        syncPages(client, data)
     # except:
     #     print("Error reading JSON.")
 
