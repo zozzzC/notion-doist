@@ -20,8 +20,6 @@ type lastEditedTimeType = dict[
 ]
 # TODO: add check for lasteditedtime that string is iso
 
-# type numberType = dict[]
-
 type nameType = dict[
     id:"title",
     "title" : list[

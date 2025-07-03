@@ -14,24 +14,47 @@ def syncPages(client: Client, data: any):
     complete_pages: SyncAsync[Any] = client.databases.query(
         **{
             "database_id": os.getenv("NOTION_DB_ID"),
-            "filter": {"property": "Done", "checkbox": {"equals": True}},
+            "filter": {
+                "and": [
+                    {"property": "Done", "checkbox": {"equals": True}},
+                    {"property": "ToDoistId", "rich_text": {"is_empty": False}},
+                ]
+            },
         }
     )
 
-    pages: SyncAsync[Any] = client.databases.query(
+    new_pages: SyncAsync[Any] = client.databases.query(
         **{
             "database_id": os.getenv("NOTION_DB_ID"),
-            "filter": {"property": "Done", "checkbox": {"equals": False}},
+            "filter": {
+                "and": [
+                    {"property": "Done", "checkbox": {"equals": False}},
+                    {"property": "ToDoistId", "rich_text": {"is_empty": True}},
+                ]
+            },
         }
     )
 
-    # pprint(pages["results"])
-    
-    
-    reformatPages = ReformatPages()
-    reformatPages.reformatPages(pages)
+    update_pages: SyncAsync[Any] = client.databases.query(
+        **{
+            "database_id": os.getenv("NOTION_DB_ID"),
+            "filter": {
+                "and": [
+                    {"property": "Done", "checkbox": {"equals": False}},
+                    {"property": "ToDoistId", "rich_text": {"is_empty": False}},
+                ]
+            },
+        }
+    )
+
+    reformatCompletePages = ReformatPages()
+    reformatCompletePages.reformatPages(complete_pages)
+
+    reformatNewPages = ReformatPages()
+    reformatNewPages.reformatPages(new_pages)
+
+    reformatUpdatePages = ReformatPages()
+    reformatUpdatePages.reformatPages(update_pages)
 
 
-    
-#NOTE: datetime start and end dates are one entire day behind for some reason. so we need to fix that offset. 
-
+# NOTE: datetime start and end dates are one entire day behind for some reason. so we need to fix that offset.
