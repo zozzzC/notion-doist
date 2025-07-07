@@ -88,7 +88,7 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
 
     # get all the new pages and add them into todoist. then we get the todoist id back and store this into the associated notion page.
 
-    needs_parent_id: Queue[dict[PagesType]] = Queue()
+    needs_parent_id: Queue[PagesType] = Queue()
 
     for page in reformatNewPages.reformatted:
         if reformatNewPages.reformatted[page]["ParentId"] != None:

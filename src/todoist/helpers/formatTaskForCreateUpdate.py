@@ -26,11 +26,11 @@ def formatTaskForCreateUpdate(
 
     if task_properties.get("due"):
         doIstDateTime = task_properties.get("due")
-        start_date = changeTimezone(doIstDateTime)
+        start_date = changeTimezone(doIstDateTime, True)
 
     if task_properties.get("datetime"):
-        doIstDateTime = task_properties.get("datetime")
-        start_date = changeTimezone(doIstDateTime)
+        doIstDateTime = task_properties.get("datetime", False)
+        start_date = changeTimezone(doIstDateTime, False)
 
     if task_properties.get("duration"):
         end_date = calculateEndDate(

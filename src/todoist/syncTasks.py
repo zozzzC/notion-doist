@@ -4,6 +4,8 @@ from notion_client import Client
 from queue import Queue
 import os
 import json
+from src.todoist.helpers.markNotionPageAsIncomplete import markNotionPageAsIncomplete
+from src.todoist.helpers.checkInNotion import checkInNotion
 from src.todoist.helpers.ReformatTasks import ReformatTasks, TasksType, TaskPropsType
 from src.todoist.helpers.deleteNotionPage import deleteNotionPage
 from src.todoist.helpers.checkForRelation import checkForRelation
@@ -34,10 +36,9 @@ def syncTasks(api: TodoistAPI, data: any):
     new_tasks = ReformatTasks()
     new_tasks.reformatTasks(tasks)
 
-    global reformatted_relation_tasks, require_relations
     reformatted_relation_tasks = ReformatTasks()
     # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
-    require_relations = Queue()
+    require_relations: Queue[TaskPropsType] = Queue()
 
     with open(os.getcwd() + "/test/doIstTask.json", "r") as f:
         cache_tasks: TasksType = json.load(f)
@@ -59,39 +60,33 @@ def syncTasks(api: TodoistAPI, data: any):
                 # print(cache_projects[p].get(o))
 
                 if cache_tasks[t].get(label) != new_tasks.reformatted[t].get(label):
-                    print(label)
-                    print(cache_tasks[t].get(label))
-                    print(new_tasks.reformatted[t].get(label))
-                    updateTaskInNotion(t, new_tasks.reformatted)
+                    updateTaskInNotion(t, require_relations, new_tasks.reformatted)
                     break
         else:
-            addTaskInNotion(t, new_tasks.reformatted)
+            # check if the task was previously in notion already. there may be a case where we untick a previously completed task.
+            notion_id = checkInNotion(t)
+
+            if notion_id != None:
+                print(
+                    "Previously marked as complete task "
+                    + new_tasks.reformatted[t]
+                    + " was marked as incomplete again."
+                )
+                markNotionPageAsIncomplete(notion_id)
+            else:
+                addTaskInNotion(t, require_relations, new_tasks.reformatted)
 
     # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
     while not require_relations.empty():
         # determine if the task already exits in cache
-        taskWithRelation: dict[
-            "content":str,
-            "duration" : str | None,
-            "duration_unit" : str | None,
-            "datetime" : str | None,
-            "description":str,
-            "parent_id" : str | None,
-            "is_completed":bool,
-            "labels" : list[str | None],
-            "timezone" : str | None,
-            "priority":int,
-            "project_id" : str | None,
-            "section_id" : str | None,
-            "due" : str | None,
-            "recurring":bool,
-            "parent_id" : str | None,
-        ] = require_relations.get()
+        taskWithRelation: TaskPropsType = require_relations.get()
 
         if taskWithRelation in cache_tasks:
-            updateTaskInNotion(taskWithRelation, new_tasks.reformatted)
+            updateTaskInNotion(
+                taskWithRelation, require_relations, new_tasks.reformatted
+            )
         else:
-            addTaskInNotion(taskWithRelation, new_tasks.reformatted)
+            addTaskInNotion(taskWithRelation, require_relations, new_tasks.reformatted)
 
     # check for deleted tasks
     for ct in cache_tasks:
@@ -110,36 +105,20 @@ def syncTasks(api: TodoistAPI, data: any):
 
 
 def updateTaskInNotion(
-    t: dict[
-        "content":str,
-        "duration" : str | None,
-        "duration_unit" : str | None,
-        "datetime" : str | None,
-        "description":str,
-        "parent_id" : str | None,
-        "is_completed":bool,
-        "labels" : list[str | None],
-        "timezone" : str | None,
-        "priority":int,
-        "project_id" : str | None,
-        "section_id" : str | None,
-        "due" : str | None,
-        "recurring":bool,
-        "parent_id" : str | None,
-    ],
+    t: TaskPropsType,
+    require_relations: Queue[TaskPropsType],
     reformatted_tasks: TasksType,
 ):
     print("Updating doIst task into Notion...")
-
     formatTaskForCreateUpdate(t, reformatted_tasks, require_relations, False)
 
 
 def addTaskInNotion(
     t: TaskPropsType,
+    require_relations: Queue[TaskPropsType],
     reformatted_tasks: TasksType,
 ):
     print("Adding doIst task into Notion...")
-
     formatTaskForCreateUpdate(t, reformatted_tasks, require_relations, True)
 
 
