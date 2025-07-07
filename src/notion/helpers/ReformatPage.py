@@ -3,12 +3,13 @@ from pprint import pprint
 from typing import Any, cast
 from src.notion.types.NotionTypes import NotionPropsType
 from src.notion.types.PagesTypes import PagesType
+from typing import Dict
 
 
 class ReformatPages:
 
     def __init__(self):
-        self.reformatted: dict[str:PagesType] = {}
+        self.reformatted: Dict[str, PagesType] = {}
         # TODO: check that pagesType works.
 
     def getReformattedPages(self):
