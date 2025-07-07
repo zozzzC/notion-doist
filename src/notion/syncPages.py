@@ -2,9 +2,14 @@ from notion_client import Client
 from dotenv import load_dotenv
 import os
 from pprint import pprint
+import json
 from notion_client.typing import SyncAsync
 from typing import Any
+from src.notion.types.NotionTypes import pagesType
 from src.notion.helpers.ReformatPage import ReformatPages
+from src.notion.helpers.createDoIstTask import createDoIstTask
+from queue import Queue
+from src.notion.helpers.getParentId import getParentId
 
 
 def syncPages(client: Client, data: any):
@@ -17,7 +22,7 @@ def syncPages(client: Client, data: any):
             "filter": {
                 "and": [
                     {"property": "Done", "checkbox": {"equals": True}},
-                    {"property": "ToDoistId", "rich_text": {"is_empty": False}},
+                    {"property": "ToDoistId", "rich_text": {"is_not_empty": True}},
                 ]
             },
         }
@@ -41,7 +46,7 @@ def syncPages(client: Client, data: any):
             "filter": {
                 "and": [
                     {"property": "Done", "checkbox": {"equals": False}},
-                    {"property": "ToDoistId", "rich_text": {"is_empty": False}},
+                    {"property": "ToDoistId", "rich_text": {"is_not_empty": True}},
                 ]
             },
         }
@@ -55,6 +60,61 @@ def syncPages(client: Client, data: any):
 
     reformatUpdatePages = ReformatPages()
     reformatUpdatePages.reformatPages(update_pages)
+
+    # notion cache contains potentially completed and potentially updated pages.
+    with open(os.getcwd() + "/test/notionpage.json", "r") as f:
+        cache_pages: dict[str : dict[pagesType]] = json.load(f)
+
+    # first we get all the new pages and add them into todoist. then we get the todoist id back and store this into the associated notion page.
+
+    needs_parent_id: Queue[dict[pagesType]] = Queue()
+
+    for page in reformatNewPages.reformatted:
+        pprint(reformatNewPages.reformatted[page])
+
+        if reformatNewPages.reformatted[page]["ParentId"] != None:
+            doist_parent_id = getParentId(
+                reformatNewPages.reformatted[page]["ParentId"],
+                page,
+                needs_parent_id,
+            )
+            if doist_parent_id != None:
+                createDoIstTask(
+                    page, reformatNewPages.reformatted[page], doist_parent_id
+                )
+            print(
+                "Successfully added task " + reformatNewPages.reformatted[page]["Name"]
+            )
+        else:
+            doist_parent_id = None
+            createDoIstTask(page, reformatNewPages.reformatted[page], doist_parent_id)
+            print(
+                "Successfully added task " + reformatNewPages.reformatted[page]["Name"]
+            )
+
+    print("Now looping through queue...")
+    while needs_parent_id.empty() == False:
+        page = needs_parent_id.get()
+        doist_parent_id = getParentId(
+            reformatNewPages.reformatted[page]["ParentId"],
+            page,
+            needs_parent_id,
+        )
+
+        if doist_parent_id != None:
+            createDoIstTask(page, reformatNewPages.reformatted[page], doist_parent_id)
+            print(
+                "Successfully added task " + reformatNewPages.reformatted[page]["Name"]
+            )
+
+    # # if there is no notion cache (dict is empty), then we have to add all into ticktick first, otherwise, we add it back again to the existing cache.
+    # if len(cache_pages) == 0:
+    #     with open(os.getcwd() + "/test/notionpage.json", "w") as f:
+    #         print("Saving Notion pages...")
+    #         json.dump(reformatNewPages.reformatted, f)
+    #         f.close()
+
+    # get all the pages that already have a doist ID and check with the cache if they were updated.
 
 
 # NOTE: datetime start and end dates are one entire day behind for some reason. so we need to fix that offset.

@@ -1,7 +1,7 @@
 from notion_client.typing import SyncAsync
 from pprint import pprint
 from typing import Any, cast
-from src.notion.types.notionProperties import notionPropsType, pagesType
+from src.notion.types.NotionTypes import NotionPropsType, pagesType
 
 
 class ReformatPages:
@@ -13,7 +13,7 @@ class ReformatPages:
     def getReformattedPages(self):
         return self.reformatted
 
-    def addIndividualPage(self, page_id: str, page: notionPropsType):
+    def addIndividualPage(self, page_id: str, page: NotionPropsType):
 
         # ensure date does exist first before trying to access start and end date.
 
@@ -49,11 +49,13 @@ class ReformatPages:
             return
 
         notion_parent = page["Parent"]["relation"]
-        parent_id = notion_parent
+        parent_id = None
 
         # parent gives us the id.
-        if len(parent_id) != 0:
+        if len(notion_parent) != 0:
             parent_id = notion_parent[0]["id"]
+
+        pprint(page)
 
         notion_priority_level = page["Priority Level"]["select"]
         priority_level = notion_priority_level
@@ -110,10 +112,9 @@ class ReformatPages:
             }
         )
 
-    def reformatPages(self, pages: SyncAsync[Any]):
+    def reformatPages(self, pages: SyncAsync[Any]) -> dict[str : dict[pagesType]]:
         for page in pages["results"]:
-            typedPage = cast(notionPropsType, page["properties"])
+            typedPage = cast(NotionPropsType, page["properties"])
             self.addIndividualPage(page["id"], typedPage)
 
-        pprint(self.reformatted)
         return self.reformatted
