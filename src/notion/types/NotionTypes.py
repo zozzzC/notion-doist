@@ -1,5 +1,4 @@
-from typing import NewType, TypedDict
-from collections import defaultdict
+from typing import NewType, TypedDict, DefaultDict
 from typing import Generic, TypeVar, List
 
 T = TypeVar("T")
@@ -52,7 +51,7 @@ class MultiSelectDictType(TypedDict):
 
 class MutliSelectType(TypedDict):
     id: str
-    multi_select: defaultdict | MultiSelectDictType
+    multi_select: DefaultDict | MultiSelectDictType
 
 
 # type lastEditedTimeType = dict[
@@ -129,7 +128,7 @@ class IdType(TypedDict):
 class RelationType(TypedDict):
     has_more: False
     id: str
-    relation: defaultdict | IdType
+    relation: DefaultDict | IdType
     type: str
 
 
@@ -150,21 +149,3 @@ class NotionPropsType(TypedDict):
     Project: SelectType
     Section: SelectType
     ToDoistId: RichTextType
-
-
-# TODO redo pages type.
-type pagesType = dict[
-    str,
-    dict[
-        "Date" : dict["end" : str | None, "start" : str | None] | None,
-        "Deadline" : dict["end" : str | None, "start" : str | None] | None,
-        "Label" : dict[str] | [],
-        "Name":str,
-        "ParentId" : str | None,
-        "Priority_Level":str,
-        "Project":str | None,
-        "Section":str | None,
-        "ToDoistId" : str | None,
-        "Status":bool,
-    ],
-]

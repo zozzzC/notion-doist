@@ -1,4 +1,5 @@
-from src.notion.types.NotionTypes import NotionPropsType, pagesType
+from src.notion.types.NotionTypes import NotionPropsType
+from src.notion.types.PagesTypes import PagesType
 from queue import Queue
 from pprint import pprint
 from src.notion.auth import notionAuth
@@ -8,8 +9,8 @@ from src.notion.helpers.ReformatPage import ReformatPages
 
 def getParentId(
     parent_page_id: str,
-    child_page: dict[pagesType],
-    needs_parent_id: Queue[dict[pagesType]],
+    child_page: dict[PagesType],
+    needs_parent_id: Queue[dict[PagesType]],
 ):
     # given a notion page with a relation, we want to get the TODOIST parent id.
     # we can check this by going through our pages dict and seeing if the given parent id has a corresponding doIst id.

@@ -5,7 +5,7 @@ from pprint import pprint
 import json
 from notion_client.typing import SyncAsync
 from typing import Any
-from src.notion.types.NotionTypes import pagesType
+from src.notion.types.PagesTypes import PagesType
 from src.notion.helpers.ReformatPage import ReformatPages
 from src.notion.helpers.createDoIstTask import createDoIstTask
 from queue import Queue
@@ -70,8 +70,6 @@ def syncPages(client: Client, data: any):
     needs_parent_id: Queue[dict[pagesType]] = Queue()
 
     for page in reformatNewPages.reformatted:
-        pprint(reformatNewPages.reformatted[page])
-
         if reformatNewPages.reformatted[page]["ParentId"] != None:
             doist_parent_id = getParentId(
                 reformatNewPages.reformatted[page]["ParentId"],
@@ -92,7 +90,7 @@ def syncPages(client: Client, data: any):
                 "Successfully added task " + reformatNewPages.reformatted[page]["Name"]
             )
 
-    print("Now looping through queue...")
+    print("Now looping through create queue...")
     while needs_parent_id.empty() == False:
         page = needs_parent_id.get()
         doist_parent_id = getParentId(
@@ -107,6 +105,8 @@ def syncPages(client: Client, data: any):
                 "Successfully added task " + reformatNewPages.reformatted[page]["Name"]
             )
 
+    # for page in reformatUpdatePages.reformatted:
+
     # # if there is no notion cache (dict is empty), then we have to add all into ticktick first, otherwise, we add it back again to the existing cache.
     # if len(cache_pages) == 0:
     #     with open(os.getcwd() + "/test/notionpage.json", "w") as f:
@@ -115,6 +115,3 @@ def syncPages(client: Client, data: any):
     #         f.close()
 
     # get all the pages that already have a doist ID and check with the cache if they were updated.
-
-
-# NOTE: datetime start and end dates are one entire day behind for some reason. so we need to fix that offset.

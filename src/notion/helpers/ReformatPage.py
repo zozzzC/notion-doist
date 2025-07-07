@@ -1,13 +1,14 @@
 from notion_client.typing import SyncAsync
 from pprint import pprint
 from typing import Any, cast
-from src.notion.types.NotionTypes import NotionPropsType, pagesType
+from src.notion.types.NotionTypes import NotionPropsType
+from src.notion.types.PagesTypes import PagesType
 
 
 class ReformatPages:
 
     def __init__(self):
-        self.reformatted: dict[str : dict[pagesType]] = {}
+        self.reformatted: dict[str:PagesType] = {}
         # TODO: check that pagesType works.
 
     def getReformattedPages(self):
@@ -112,7 +113,7 @@ class ReformatPages:
             }
         )
 
-    def reformatPages(self, pages: SyncAsync[Any]) -> dict[str : dict[pagesType]]:
+    def reformatPages(self, pages: SyncAsync[Any]) -> dict[str : dict[PagesType]]:
         for page in pages["results"]:
             typedPage = cast(NotionPropsType, page["properties"])
             self.addIndividualPage(page["id"], typedPage)

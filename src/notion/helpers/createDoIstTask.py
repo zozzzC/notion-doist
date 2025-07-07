@@ -1,4 +1,5 @@
-from src.notion.types.NotionTypes import NotionPropsType, pagesType
+from src.notion.types.NotionTypes import NotionPropsType
+from src.notion.types.PagesTypes import PagesType
 from pprint import pprint
 from src.notion.helpers.getParentId import getParentId
 from src.todoist.auth import doIstAuth
@@ -13,7 +14,7 @@ from src.notion.helpers.project.getProjectId import getProjectId
 from todoist_api_python.models import Task
 
 
-def createDoIstTask(pageId: str, page: dict[pagesType], doist_parent_id: str | None):
+def createDoIstTask(pageId: str, page: dict[PagesType], doist_parent_id: str | None):
     api = doIstAuth()
     client = notionAuth()
     content = page["Name"]
@@ -117,7 +118,6 @@ def createDoIstTask(pageId: str, page: dict[pagesType], doist_parent_id: str | N
         duration_unit=duration_unit,
         deadline_date=deadline_date,
     )
-
 
     page["ToDoistId"] = newTask.id
 
