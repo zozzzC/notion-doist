@@ -1,4 +1,5 @@
 import json
+import pytz
 from typing import TypedDict
 
 
@@ -17,8 +18,9 @@ def verifyConfig():
 
     try:
         ConfigType(config_data)
-
     except:
         raise ValueError(
             "Config file was not filled out properly. Please be sure to fill in all values EXCEPT for last_sync."
         )
+
+    pytz.timezone(config_data["timezone"])

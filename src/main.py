@@ -10,9 +10,11 @@ from src.notion.syncPages import syncPages
 from todoist.syncTasks import syncTasks
 import json
 import os
+from verifyConfig import verifyConfig
 
 
 def main():
+    verifyConfig()
     client = notionAuth()
     api = doIstAuth()
     try:
