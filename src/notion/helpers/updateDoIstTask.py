@@ -14,7 +14,7 @@ from src.notion.helpers.project.getProjectId import getProjectId
 from todoist_api_python.models import Task
 
 
-def updateDoIstTask(pageId: str, page: dict[PagesType], doist_parent_id: str | None):
+def updateDoIstTask(pageId: str, page: PagesType, doist_parent_id: str | None):
     api = doIstAuth()
     client = notionAuth()
     content = page["Name"]
@@ -52,7 +52,6 @@ def updateDoIstTask(pageId: str, page: dict[PagesType], doist_parent_id: str | N
                     - datetime.fromisoformat(start_date)
                 ).total_seconds() / 3600
                 duration_unit = "minute"
-                print("time duration")
             else:
                 # in this case it is a day duration
                 duration = (
@@ -60,7 +59,6 @@ def updateDoIstTask(pageId: str, page: dict[PagesType], doist_parent_id: str | N
                     - datetime.fromisoformat(start_date).date()
                 ).days
                 duration_unit = "day"
-                print("day duration")
             # TODO fix duration, must be string, but right now its a timedelta obj
 
     deadline = page["Deadline"]
@@ -125,4 +123,3 @@ def updateDoIstTask(pageId: str, page: dict[PagesType], doist_parent_id: str | N
         section_id=section_id,
         parent_id=doist_parent_id,
     )
-

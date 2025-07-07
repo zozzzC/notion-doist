@@ -80,22 +80,6 @@ class ReformatPages:
         if len(page["ToDoistId"]["rich_text"]) != 0:
             toDoIst_id = page["ToDoistId"]["rich_text"][0]["plain_text"]
 
-        pprint(
-            {
-                page_id: {
-                    "Date": date,
-                    "Deadline": deadline,
-                    "Label": label,
-                    "Name": name,
-                    "ParentId": parent_id,
-                    "Priority_Level": priority_level,
-                    "Project": project,
-                    "Section": section,
-                    "ToDoistId": toDoIst_id,
-                }
-            }
-        )
-
         self.reformatted.update(
             {
                 page_id: {
