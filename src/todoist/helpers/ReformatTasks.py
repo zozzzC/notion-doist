@@ -1,49 +1,31 @@
 from todoist_api_python.models import Task
 import pprint
-from typing import Iterator
+from typing import Iterator, TypedDict, List, Dict
 
-type tasksType = dict[
-    str,
-    dict[
-        "content":str,
-        "duration" : str | None,
-        "duration_unit" : str | None,
-        "datetime" : str | None,
-        "description":str,
-        "parent_id" : str | None,
-        "is_completed":bool,
-        "labels" : list[str | None],
-        "timezone" : str | None,
-        "priority":int,
-        "project_id" : str | None,
-        "due" : str | None,
-        "recurring":bool,
-    ],
-]
 
-type taskType = dict[
-    "content":str,
-    "duration" : str | None,
-    "duration_unit" : str | None,
-    "datetime" : str | None,
-    "description":str,
-    "parent_id" : str | None,
-    "is_completed":bool,
-    "labels" : list[str | None],
-    "timezone" : str | None,
-    "priority":int,
-    "project_id" : str | None,
-    "section_id" : str | None,
-    "due" : str | None,
-    "recurring":bool,
-    "parent_id" : str | None,
-]
+class TaskPropsType(TypedDict):
+    content: str
+    duration: str | None
+    duration_unit: str | None
+    datetime: str | None
+    description: str | None
+    parent_id: str | None
+    is_completed: bool
+    labels: List[str | None]
+    timezone: str | None
+    priority: int
+    project_id: str | None
+    section_id: str | None
+    due: str | None
+    recurring: bool
 
+
+TasksType = Dict[str, TaskPropsType]
 
 class ReformatTasks:
 
     def __init__(self):
-        self.reformatted: dict[str : dict[tasksType]] = {}
+        self.reformatted: Dict[str, TaskPropsType] = {}
 
     def getReformattedTasks(self):
         return self.reformatted
@@ -75,7 +57,6 @@ class ReformatTasks:
             self.reformatted.get(t.id).update(reformatted_due)
 
         if t.duration:
-            print(t.duration.amount)
             duration = str(t.duration.amount)
             duration_unit = str(t.duration.unit)
             reformatted_duration = {
@@ -87,11 +68,10 @@ class ReformatTasks:
         if t.parent_id:
             self.reformatted.get(t.id).update({"parent_id": t.parent_id})
 
-    def reformatTasks(self, tasks: Iterator[list[Task]]) -> dict[str : dict[tasksType]]:
+    def reformatTasks(self, tasks: Iterator[list[Task]]) -> Dict[str, TaskPropsType]:
         for t in next(tasks):
             self.addIndividualTask(t)
 
-        pprint.pprint(self.reformatted)
         return self.reformatted
 
     def idExists(self, id: str) -> bool:

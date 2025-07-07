@@ -7,7 +7,6 @@ from src.todoist.helpers.getProperties import getProperties, getResults
 from todoist.auth import doIstAuth
 from __init__ import __init__
 from src.notion.syncPages import syncPages
-
 from todoist.syncTasks import syncTasks
 import json
 import os
@@ -16,28 +15,16 @@ import os
 def main():
     client = notionAuth()
     api = doIstAuth()
-    # res = getProperties(
-    #     getResults(
-    #         client.databases.query(
-    #             **{
-    #                 "database_id": os.getenv("NOTION_DB_ID"),
-    #                 "filter": {"property": "Done", "checkbox": {"equals": True}},
-    #             }
-    #         )
-    #     )
-    # )
+    try:
+        with open((os.getcwd() + "/test/doIstTask.json"), "r") as file:
+            data = json.load(file)
+            syncTasks(api, data)
 
-    # pprint(res)
-
-    # createNotionPage("me", client, api)
-
-    # try:
-    with open((os.getcwd() + "/test/doIstTask.json"), "r") as file:
-        data = json.load(file)
-        # syncTasks(api, data)
-        syncPages(client, data)
-    # except:
-    #     print("Error reading JSON.")
+        # with open((os.getcwd() + "/test/notionPages.json"), "r") as file:
+        #     data = json.load(file)
+        #     syncPages(client, cache_pages=data)
+    except:
+        print("Error reading cache.")
 
 
 main()

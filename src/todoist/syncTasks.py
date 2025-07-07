@@ -4,7 +4,7 @@ from notion_client import Client
 from queue import Queue
 import os
 import json
-from src.todoist.helpers.ReformatTasks import ReformatTasks, tasksType, taskType
+from src.todoist.helpers.ReformatTasks import ReformatTasks, TasksType, TaskPropsType
 from src.todoist.helpers.deleteNotionPage import deleteNotionPage
 from src.todoist.helpers.checkForRelation import checkForRelation
 from src.todoist.helpers.convertPriority import convertPriority
@@ -40,7 +40,7 @@ def syncTasks(api: TodoistAPI, data: any):
     require_relations = Queue()
 
     with open(os.getcwd() + "/test/doIstTask.json", "r") as f:
-        cache_tasks: dict[str : dict[tasksType]] = json.load(f)
+        cache_tasks: TasksType = json.load(f)
 
     if len(data) == 0:
         with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
@@ -127,7 +127,7 @@ def updateTaskInNotion(
         "recurring":bool,
         "parent_id" : str | None,
     ],
-    reformatted_tasks: dict[str : dict[tasksType]],
+    reformatted_tasks: TasksType,
 ):
     print("Updating doIst task into Notion...")
 
@@ -135,17 +135,17 @@ def updateTaskInNotion(
 
 
 def addTaskInNotion(
-    t: dict[taskType],
-    reformatted_tasks: dict[str : dict[tasksType]],
+    t: TaskPropsType,
+    reformatted_tasks: TasksType,
 ):
     print("Adding doIst task into Notion...")
 
     formatTaskForCreateUpdate(t, reformatted_tasks, require_relations, True)
 
 
-def deleteTaskInNotion(t: dict[taskType]):
+def deleteTaskInNotion(t: TaskPropsType):
     deleteNotionPage(lookupPageByTodoistId(t))
 
 
-def completeTaskInNotion(t: dict[taskType]):
+def completeTaskInNotion(t: TaskPropsType):
     completeNotionPage(lookupPageByTodoistId(t))

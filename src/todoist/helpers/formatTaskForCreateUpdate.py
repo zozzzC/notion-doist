@@ -1,4 +1,4 @@
-from src.todoist.helpers.ReformatTasks import ReformatTasks, tasksType, taskType
+from src.todoist.helpers.ReformatTasks import ReformatTasks, TasksType, TaskPropsType
 import queue
 from src.todoist.helpers.changeTimezone import changeTimezone
 from src.todoist.helpers.convertPriority import convertPriority
@@ -9,9 +9,14 @@ from src.notion.helpers.lookupPageByTodoistId import lookupPageByTodoistId
 from src.todoist.helpers.updateNotionPage import updateNotionPage
 from src.todoist.helpers.createNotionPage import createNotionPage
 
-def formatTaskForCreateUpdate(t: dict[taskType], 
-    reformatted_tasks: dict[str : dict[tasksType]], require_relations: queue, create: bool):
-    
+
+def formatTaskForCreateUpdate(
+    t: TaskPropsType,
+    reformatted_tasks: TasksType,
+    require_relations: queue,
+    create: bool,
+):
+
     task_properties = reformatted_tasks[t]
     # task properties contains content, labels, description, project_id, etc
 
@@ -55,34 +60,34 @@ def formatTaskForCreateUpdate(t: dict[taskType],
             return
         else:
             parent_id = lookupPageByTodoistId(task_properties.get("parent_id"))
-            
-    if (create):
-            createNotionPage(
-        t,
-        task_properties.get("content"),
-        start_date,
-        end_date,
-        time_zone,
-        None,
-        priority,
-        project,
-        section,
-        task_properties.get("labels"),
-        parent_id,
-    )
+
+    if create:
+        createNotionPage(
+            t,
+            task_properties.get("content"),
+            start_date,
+            end_date,
+            time_zone,
+            None,
+            priority,
+            project,
+            section,
+            task_properties.get("labels"),
+            parent_id,
+        )
     else:
         page_id = lookupPageByTodoistId(t)
         updateNotionPage(
-        t,
-        task_properties.get("content"),
-        start_date,
-        end_date,
-        time_zone,
-        None,
-        priority,
-        project,
-        section,
-        task_properties.get("labels"),
-        parent_id,
-        page_id,
-    )
+            t,
+            task_properties.get("content"),
+            start_date,
+            end_date,
+            time_zone,
+            None,
+            priority,
+            project,
+            section,
+            task_properties.get("labels"),
+            parent_id,
+            page_id,
+        )

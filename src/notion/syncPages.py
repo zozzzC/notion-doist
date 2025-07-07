@@ -19,13 +19,12 @@ from src.notion.helpers.removeCompletedPages import removeCompletedPages
 from src.notion.helpers.getCompletedPages import getCompletedPages
 from src.todoist.helpers.changeTimezone import changeTimezone
 from pprint import pprint
+from typing import Dict
 
 
-def syncPages(client: Client, data: any):
+def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
     # notion cache contains potentially completed and potentially updated pages.
-    with open(os.getcwd() + "/test/notionPage.json", "r") as f:
-        cache_pages: dict[str : dict[PagesType]] = json.load(f)
-        last_sync_pages = cache_pages.copy()
+    last_sync_pages = cache_pages.copy()
 
     new_pages: SyncAsync[Any] = client.databases.query(
         **{
