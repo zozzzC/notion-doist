@@ -18,6 +18,7 @@ from src.notion.helpers.completeDoIstTask import completeDoIstTask
 from src.notion.helpers.removeCompletedPages import removeCompletedPages
 from src.notion.helpers.getCompletedPages import getCompletedPages
 from src.todoist.helpers.changeTimezone import changeTimezone
+from pprint import pprint
 
 
 def syncPages(client: Client, data: any):
@@ -43,9 +44,6 @@ def syncPages(client: Client, data: any):
 
     with open("config.json", "r") as f:
         config_data = json.load(f)
-
-    print(config_data["last_sync"])
-    # NOTE: last_sync is in UTC time since this is the time used in notion.
 
     if config_data["last_sync"] != None:
 
@@ -82,6 +80,7 @@ def syncPages(client: Client, data: any):
     config_sync["last_sync"] = changeTimezone(
         datetime.now().replace(second=0, microsecond=0).isoformat()
     ).isoformat()
+    # NOTE: last_sync is in UTC time since this is the time used in notion.
 
     with open("config.json", "w") as f:
         pprint(config_sync)
@@ -148,11 +147,8 @@ def syncPages(client: Client, data: any):
         # determine if there are any changes.
         # first we look up the corresponding page in our cache.
 
-        print(reformatUpdatePages.reformatted[page]["Name"])
-
         # there may be a case where the task was synced but was marked as complete then marked as uncomplete, in that case we want to un-complete the task, but by then task does not exist in the notion cache anymore. so we have to add it back into cache.
         if page not in cache_pages:
-            print("incomplete.")
             markDoIstTaskAsIncomplete(
                 reformatUpdatePages.reformatted[page]["ToDoistId"]
             )
@@ -161,8 +157,6 @@ def syncPages(client: Client, data: any):
             continue
 
         cache_page = cache_pages[page]
-        # remove the task from the last sync means the task still exists and wasn't deleted.
-        del last_sync_pages[page]
 
         # TODO if the task has a parent id, and the parent id is marked as complete, then we simply SKIP the task, since the child task would be marked as complete by todoist.
 
@@ -204,11 +198,28 @@ def syncPages(client: Client, data: any):
                     )
 
     # now we want to see if we have any pages that were deleted, and delete them.
-    # TODO: not working.
-    # for page in last_sync_pages:
-    #     print("Successfully deleted task " + last_sync_pages[page]["Name"])
-    #     deleteDoIstTask(last_sync_pages[page])
-    #     del cache_pages[page]
+    # to do this we compare all the pages currently in notion VS the last sync. delete if we find a match for all items currently in notion. then the remaining items in last sync are now the tasks that are deleted, so we delete it in doist.
+
+    all_pages: SyncAsync[Any] = client.databases.query(
+        **{
+            "database_id": os.getenv("NOTION_DB_ID"),
+            "filter": {"property": "ToDoistId", "rich_text": {"is_not_empty": True}},
+        }
+    )
+
+    reformatAllPages = ReformatPages()
+    reformatAllPages.reformatPages(all_pages)
+
+    last_sync_copy = last_sync_pages.copy()
+
+    for page in reformatAllPages.reformatted:
+        if page in last_sync_copy:
+            del last_sync_pages[page]
+
+    for page in last_sync_pages:
+        print("Successfully deleted task " + last_sync_pages[page]["Name"])
+        deleteDoIstTask(last_sync_pages[page])
+        del cache_pages[page]
 
     with open(os.getcwd() + "/test/notionPage.json", "w") as f:
         cache_pages.update(reformatUpdatePages.reformatted)

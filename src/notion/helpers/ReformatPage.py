@@ -10,7 +10,6 @@ class ReformatPages:
 
     def __init__(self):
         self.reformatted: Dict[str, PagesType] = {}
-        # TODO: check that pagesType works.
 
     def getReformattedPages(self):
         return self.reformatted

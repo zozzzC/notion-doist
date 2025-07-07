@@ -88,8 +88,6 @@ def updateDoIstTask(pageId: str, page: PagesType, doist_parent_id: str | None):
     if page["Section"] != None:
         section_id = getSectionId(page["Section"])
 
-        print(section_id)
-
         if project_id == getProjectId("Inbox"):
             print(
                 "Page "
