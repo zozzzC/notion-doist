@@ -5,6 +5,7 @@ from pprint import pprint
 from src.notion.auth import notionAuth
 import os
 from src.notion.helpers.ReformatPage import ReformatPages
+import json
 
 
 def getParentId(
@@ -16,10 +17,12 @@ def getParentId(
     # we can check this by going through our pages dict and seeing if the given parent id has a corresponding doIst id.
 
     client = notionAuth()
+    with open(("config.json"), "r") as file:
+        config_data = json.load(file)
 
     pagesWithDoistId = client.databases.query(
         **{
-            "database_id": os.getenv("NOTION_DB_ID"),
+            "database_id": config_data["notion_db_id"],
             "filter": {
                 "and": [
                     {"property": "ToDoistId", "rich_text": {"is_not_empty": True}},

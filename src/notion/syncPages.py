@@ -27,9 +27,12 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
     # notion cache contains potentially completed and potentially updated pages.
     last_sync_pages = cache_pages.copy()
 
+    with open(("config.json"), "r") as file:
+        config_data = json.load(file)
+
     new_pages: SyncAsync[Any] = client.databases.query(
         **{
-            "database_id": os.getenv("NOTION_DB_ID"),
+            "database_id": config_data["notion_db_id"],
             "filter": {
                 "and": [
                     {"property": "Done", "checkbox": {"equals": False}},
@@ -55,7 +58,7 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
     if config_data["last_sync"] != None:
         update_pages: SyncAsync[Any] = client.databases.query(
             **{
-                "database_id": os.getenv("NOTION_DB_ID"),
+                "database_id": config_data["notion_db_id"],
                 "filter": {
                     "and": [
                         {
@@ -85,7 +88,7 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
         # we want to add into the cache the todoist tasks that were just synced in.
         update_pages: SyncAsync[Any] = client.databases.query(
             **{
-                "database_id": os.getenv("NOTION_DB_ID"),
+                "database_id": config_data["notion_db_id"],
                 "filter": {
                     "property": "ToDoistId",
                     "rich_text": {"is_not_empty": True},
@@ -255,7 +258,7 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
 
     all_pages: SyncAsync[Any] = client.databases.query(
         **{
-            "database_id": os.getenv("NOTION_DB_ID"),
+            "database_id": config_data["notion_db_id"],
             "filter": {"property": "ToDoistId", "rich_text": {"is_not_empty": True}},
         }
     )

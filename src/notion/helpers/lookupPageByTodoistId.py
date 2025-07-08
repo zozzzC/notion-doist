@@ -3,17 +3,20 @@ import os
 from dotenv import load_dotenv
 from src.todoist.helpers.getProperties import getProperties, getResults
 from pprint import pprint
+import json
 
 
 def lookupPageByTodoistId(todoistId: str):
     client = notionAuth()
+    with open(("config.json"), "r") as file:
+        config_data = json.load(file)
 
     # try:
     res = getProperties(
         getResults(
             client.databases.query(
                 **{
-                    "database_id": os.getenv("NOTION_DB_ID"),
+                    "database_id": config_data["notion_db_id"],
                     "filter": {
                         "property": "ToDoistId",
                         "rich_text": {"contains": todoistId},
@@ -23,7 +26,7 @@ def lookupPageByTodoistId(todoistId: str):
         )
     )
 
-    if (len(list(res.keys())) == 0):
+    if len(list(res.keys())) == 0:
         return None
 
     return list(res.keys())[0]

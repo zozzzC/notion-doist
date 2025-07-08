@@ -1,11 +1,14 @@
 import os
 from notion_client import Client
 from dotenv import load_dotenv
+import json
 
 
 def notionAuth() -> Client:
     try:
-        notion = Client(auth=os.getenv("NOTION_TOKEN"))
-        return notion
+        with open(("config.json"), "r") as file:
+            config_data = json.load(file)
+            notion = Client(auth=config_data["notion_token"])
+            return notion
     except:
         print("Notion Token was not initialized.")

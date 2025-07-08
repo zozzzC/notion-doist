@@ -8,6 +8,7 @@ import pprint
 from src.notion.auth import notionAuth
 from src.todoist.auth import doIstAuth
 from src.todoist.helpers.formatLabel import formatLabel
+import json
 
 
 def createNotionPage(
@@ -82,8 +83,11 @@ def createNotionPage(
     if parent_id:
         create.update({"Parent": {"type": "relation", "relation": [{"id": parent_id}]}})
 
+    with open(("config.json"), "r") as file:
+        config_data = json.load(file)
+
     client.pages.create(
-        parent={"database_id": os.getenv("NOTION_DB_ID")}, properties=create
+        parent={"database_id": config_data["notion_db_id"]}, properties=create
     )
 
     print("Successfully created Notion page for " + name)
