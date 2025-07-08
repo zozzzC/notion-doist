@@ -172,11 +172,8 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
         # TODO: cache isnt beign saved porperly
         with open(os.getcwd() + "/test/notionPage.json", "r") as f:
             cache_pages = json.load(f)
-            pprint(cache_pages)
             cache_pages.update(reformatNewPages.reformatted)
             cache_pages.update(reformatUpdatePages.reformatted)
-            print("new")
-            pprint(cache_pages)
             f.close()
         with open(os.getcwd() + "/test/notionPage.json", "w") as f:
             json.dump(cache_pages, f)

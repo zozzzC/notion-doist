@@ -60,7 +60,7 @@ def syncTasks(api: TodoistAPI, data: any):
                 # print(cache_projects[p].get(o))
 
                 if cache_tasks[t].get(label) != new_tasks.reformatted[t].get(label):
-                    #NOTE: we do NOT update if the cache's date is exactly one day behind -- this is expected.  
+                    # NOTE: we do NOT update if the cache's date is exactly one day behind -- this is expected.
                     updateTaskInNotion(t, require_relations, new_tasks.reformatted)
                     break
         else:

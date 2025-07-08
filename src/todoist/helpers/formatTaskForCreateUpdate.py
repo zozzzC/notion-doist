@@ -8,6 +8,7 @@ from src.todoist.helpers.calculateEndDate import calculateEndDate
 from src.notion.helpers.lookupPageByTodoistId import lookupPageByTodoistId
 from src.todoist.helpers.updateNotionPage import updateNotionPage
 from src.todoist.helpers.createNotionPage import createNotionPage
+import json
 
 
 def formatTaskForCreateUpdate(
@@ -22,15 +23,19 @@ def formatTaskForCreateUpdate(
 
     start_date = None
     end_date = None
-    #TODO: use dynamic timezone
-    time_zone = "Pacific/Auckland"
+    # TODO: use dynamic timezone
+
+    with open("config.json", "r") as f:
+        config_data = json.load(f)
+
+    time_zone = config_data["timezone"]
 
     if task_properties.get("due"):
         doIstDateTime = task_properties.get("due")
-        start_date = changeTimezone(doIstDateTime, True)
+        start_date = changeTimezone(doIstDateTime, True).strftime("%Y%m%d")
 
     if task_properties.get("datetime"):
-        doIstDateTime = task_properties.get("datetime", False)
+        doIstDateTime = task_properties.get("datetime")
         start_date = changeTimezone(doIstDateTime, False)
 
     if task_properties.get("duration"):

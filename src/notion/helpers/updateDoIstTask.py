@@ -42,7 +42,7 @@ def updateDoIstTask(
         start_time = getTime(start_date)
 
         if start_time != None:
-            due_date = datetime.fromisoformat(start_date).date().isoformat()
+            due_date = datetime.fromisoformat(start_date).date().strftime("%Y%m%d")
         else:
             due_datetime = datetime.fromisoformat(start_date).isoformat()
 
