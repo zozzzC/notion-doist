@@ -17,16 +17,21 @@ def main():
     verifyConfig()
     client = notionAuth()
     api = doIstAuth()
-    # try:
-    with open((os.getcwd() + "/test/doIstTask.json"), "r") as file:
-        data = json.load(file)
-        syncTasks(api, data)
+    try:
+        with open((os.getcwd() + "/test/doIstTask.json"), "r") as file:
+            data = json.load(file)
+    except:
+        print("Error reading Todoist Cache.")
 
-    # with open((os.getcwd() + "/test/notionPages.json"), "r") as file:
-    #     data = json.load(file)
-    #     syncPages(client, cache_pages=data)
-    # except:
-    #     print("Error reading cache.")
+    syncTasks(api, data)
+
+    try:
+        with open((os.getcwd() + "/test/notionPage.json"), "r") as file:
+            data = json.load(file)
+    except:
+        print("Error reading Notion cache.")
+
+    syncPages(client, cache_pages=data)
 
 
 main()

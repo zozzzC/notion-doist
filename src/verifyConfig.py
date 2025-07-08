@@ -16,6 +16,7 @@ def verifyConfig():
     with open("config.json", "r") as f:
         config_data = json.load(f)
 
+    # TODO not working.
     try:
         ConfigType(config_data)
     except:

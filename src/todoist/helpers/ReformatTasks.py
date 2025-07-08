@@ -22,6 +22,7 @@ class TaskPropsType(TypedDict):
 
 TasksType = Dict[str, TaskPropsType]
 
+
 class ReformatTasks:
 
     def __init__(self):

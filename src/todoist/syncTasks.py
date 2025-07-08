@@ -60,6 +60,7 @@ def syncTasks(api: TodoistAPI, data: any):
                 # print(cache_projects[p].get(o))
 
                 if cache_tasks[t].get(label) != new_tasks.reformatted[t].get(label):
+                    #NOTE: we do NOT update if the cache's date is exactly one day behind -- this is expected.  
                     updateTaskInNotion(t, require_relations, new_tasks.reformatted)
                     break
         else:
@@ -69,7 +70,7 @@ def syncTasks(api: TodoistAPI, data: any):
             if notion_id != None:
                 print(
                     "Previously marked as complete task "
-                    + new_tasks.reformatted[t]
+                    + new_tasks.reformatted[t]["content"]
                     + " was marked as incomplete again."
                 )
                 markNotionPageAsIncomplete(notion_id)
@@ -93,9 +94,11 @@ def syncTasks(api: TodoistAPI, data: any):
         if ct in completed_tasks.reformatted:
             print("Task " + cache_tasks[ct].get("content") + " was completed.")
             completeTaskInNotion(ct)
+            # remove this from notion cache
         elif ct not in new_tasks.reformatted:
             print("Task " + cache_tasks[ct].get("content") + " was deleted.")
             deleteTaskInNotion(ct)
+            # remove this from notion cache
     checkForRelation(reformatted_relation_tasks.reformatted)
 
     with open(os.getcwd() + "/test/doIstTask.json", "w") as f:

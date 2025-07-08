@@ -12,9 +12,15 @@ from src.notion.helpers.section.getSectionId import getSectionId
 from src.notion.helpers.project.createProjectId import createProjectId
 from src.notion.helpers.project.getProjectId import getProjectId
 from todoist_api_python.models import Task
+from src.todoist.helpers.ReformatTasks import TasksType
 
 
-def updateDoIstTask(pageId: str, page: PagesType, doist_parent_id: str | None):
+def updateDoIstTask(
+    pageId: str,
+    page: PagesType,
+    doist_parent_id: str | None,
+    add_to_doist_cache: TasksType,
+):
     api = doIstAuth()
     client = notionAuth()
     content = page["Name"]
@@ -36,9 +42,9 @@ def updateDoIstTask(pageId: str, page: PagesType, doist_parent_id: str | None):
         start_time = getTime(start_date)
 
         if start_time != None:
-            due_date = datetime.fromisoformat(start_date).date()
+            due_date = datetime.fromisoformat(start_date).date().isoformat()
         else:
-            due_datetime = datetime.fromisoformat(start_date)
+            due_datetime = datetime.fromisoformat(start_date).isoformat()
 
         end_date = date["end"]
 
@@ -103,16 +109,30 @@ def updateDoIstTask(pageId: str, page: PagesType, doist_parent_id: str | None):
 
     task_id = page["ToDoistId"]
 
+    due_date_str = None
+
+    if due_date != None:
+        due_date_str = datetime.fromisoformat(due_date)
+
+    due_datetime_str = None
+
+    if due_datetime != None:
+        due_datetime_str = datetime.fromisoformat(due_datetime)
+
+    deadline_date_str = None
+    if deadline_date != None:
+        deadline_date_str = datetime.fromisoformat(deadline_date)
+
     api.update_task(
         task_id=task_id,
         content=content,
         labels=labels,
         priority=priority,
-        due_date=due_date,
-        due_datetime=due_datetime,
+        due_date=due_date_str,
+        due_datetime=due_datetime_str,
         duration=duration,
         duration_unit=duration_unit,
-        deadline_date=deadline_date,
+        deadline_date=deadline_date_str,
     )
 
     api.move_task(
@@ -121,3 +141,17 @@ def updateDoIstTask(pageId: str, page: PagesType, doist_parent_id: str | None):
         section_id=section_id,
         parent_id=doist_parent_id,
     )
+
+    add_to_doist_cache[task_id] = {
+        "content": content,
+        "project_id": project_id,
+        "section_id": section_id,
+        "parent_id": doist_parent_id,
+        "labels": labels,
+        "priority": priority,
+        "due_date": due_date,
+        "due_datetime": due_datetime,
+        "duration": duration,
+        "duration_unit": duration_unit,
+        "deadline_date": deadline_date,
+    }

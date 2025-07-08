@@ -13,9 +13,7 @@ def checkInNotion(todoistId: str):
         }
     )
 
-    print(page)
-
-    if len(page) != 0:
+    if len(page["results"]) != 0:
         return page["results"][0]["id"]
 
     return None

@@ -22,6 +22,7 @@ def formatTaskForCreateUpdate(
 
     start_date = None
     end_date = None
+    #TODO: use dynamic timezone
     time_zone = "Pacific/Auckland"
 
     if task_properties.get("due"):

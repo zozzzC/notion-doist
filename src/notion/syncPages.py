@@ -20,6 +20,7 @@ from src.notion.helpers.getCompletedPages import getCompletedPages
 from src.todoist.helpers.changeTimezone import changeTimezone
 from pprint import pprint
 from typing import Dict
+from src.todoist.helpers.ReformatTasks import TasksType, TaskPropsType
 
 
 def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
@@ -44,8 +45,14 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
     with open("config.json", "r") as f:
         config_data = json.load(f)
 
-    if config_data["last_sync"] != None:
+    # get all the new pages and add them into todoist. then we get the todoist id back and store this into the associated notion page.
 
+    with open(os.getcwd() + "/test/doIstTask.json", "r") as f:
+        old_to_doist_cache: TasksType = json.load(f)
+        f.close()
+    add_to_doist_cache: TasksType = old_to_doist_cache.copy()
+
+    if config_data["last_sync"] != None:
         update_pages: SyncAsync[Any] = client.databases.query(
             **{
                 "database_id": os.getenv("NOTION_DB_ID"),
@@ -60,6 +67,7 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
                 },
             }
         )
+
         reformatUpdatePages = ReformatPages()
         reformatUpdatePages.reformatPages(update_pages)
 
@@ -70,14 +78,31 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
 
         for page in complete_pages:
             print("Successfully completed task " + complete_pages[page]["Name"])
-            completeDoIstTask(complete_pages[page])
+            completeDoIstTask(complete_pages[page], add_to_doist_cache)
             del cache_pages[page]
             del last_sync_pages[page]
+    else:
+        # we want to add into the cache the todoist tasks that were just synced in.
+        update_pages: SyncAsync[Any] = client.databases.query(
+            **{
+                "database_id": os.getenv("NOTION_DB_ID"),
+                "filter": {
+                    "property": "ToDoistId",
+                    "rich_text": {"is_not_empty": True},
+                },
+            }
+        )
+        reformatUpdatePages = ReformatPages()
+        reformatUpdatePages.reformatPages(update_pages)
 
-    config_sync = {}
+    with open("config.json", "r") as f:
+        config_sync = json.load(f)
 
     config_sync["last_sync"] = changeTimezone(
-        datetime.now().replace(second=0, microsecond=0).isoformat()
+        datetime.now()
+        .replace(minute=datetime.now().minute - 1, second=0, microsecond=0)
+        .isoformat(),
+        False,
     ).isoformat()
     # NOTE: last_sync is in UTC time since this is the time used in notion.
 
@@ -85,8 +110,6 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
         pprint(config_sync)
         json.dump(config_sync, f, indent=4)
         f.close()
-
-    # get all the new pages and add them into todoist. then we get the todoist id back and store this into the associated notion page.
 
     needs_parent_id: Queue[PagesType] = Queue()
 
@@ -99,14 +122,22 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
             )
             if doist_parent_id != None:
                 createDoIstTask(
-                    page, reformatNewPages.reformatted[page], doist_parent_id
+                    page,
+                    reformatNewPages.reformatted[page],
+                    doist_parent_id,
+                    add_to_doist_cache,
                 )
             print(
                 "Successfully added task " + reformatNewPages.reformatted[page]["Name"]
             )
         else:
             doist_parent_id = None
-            createDoIstTask(page, reformatNewPages.reformatted[page], doist_parent_id)
+            createDoIstTask(
+                page,
+                reformatNewPages.reformatted[page],
+                doist_parent_id,
+                add_to_doist_cache,
+            )
             print(
                 "Successfully added task " + reformatNewPages.reformatted[page]["Name"]
             )
@@ -120,19 +151,37 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
         )
 
         if doist_parent_id != None:
-            createDoIstTask(page, reformatNewPages.reformatted[page], doist_parent_id)
+            createDoIstTask(
+                page,
+                reformatNewPages.reformatted[page],
+                doist_parent_id,
+                add_to_doist_cache,
+            )
             print(
                 "Successfully added task " + reformatNewPages.reformatted[page]["Name"]
             )
 
+    # TODO: cache is not being saved properly.
+    with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
+        json.dump(add_to_doist_cache, f)
+        f.close()
+        print("Updated Todoist Cache with newly added Notion pages.")
+
     # if there is no notion cache (dict is empty), then we have to add all into ticktick first, otherwise, we add it back again to the existing cache.
     if len(cache_pages) == 0:
-        with open(os.getcwd() + "/test/notionPage.json", "w") as f:
-            pprint(reformatNewPages.reformatted)
-            json.dump(reformatNewPages.reformatted, f)
+        # TODO: cache isnt beign saved porperly
+        with open(os.getcwd() + "/test/notionPage.json", "r") as f:
+            cache_pages = json.load(f)
+            pprint(cache_pages)
+            cache_pages.update(reformatNewPages.reformatted)
+            cache_pages.update(reformatUpdatePages.reformatted)
+            print("new")
+            pprint(cache_pages)
             f.close()
-            print("Saving Notion pages...")
-            return
+        with open(os.getcwd() + "/test/notionPage.json", "w") as f:
+            json.dump(cache_pages, f)
+            f.close()
+        return
     # if there IS a notion cache, we want to combine the notion cache and reformatNewPages.
     else:
         with open(os.getcwd() + "/test/notionPage.json", "w") as f:
@@ -149,7 +198,9 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
         # there may be a case where the task was synced but was marked as complete then marked as uncomplete, in that case we want to un-complete the task, but by then task does not exist in the notion cache anymore. so we have to add it back into cache.
         if page not in cache_pages:
             markDoIstTaskAsIncomplete(
-                reformatUpdatePages.reformatted[page]["ToDoistId"]
+                page,
+                reformatUpdatePages.reformatted[page]["ToDoistId"],
+                add_to_doist_cache,
             )
             # add back into cache
             cache_pages[page] = reformatUpdatePages.reformatted[page]
@@ -180,7 +231,10 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
                     )
                     if doist_parent_id != None:
                         updateDoIstTask(
-                            page, reformatUpdatePages.reformatted[page], doist_parent_id
+                            page,
+                            reformatUpdatePages.reformatted[page],
+                            doist_parent_id,
+                            add_to_doist_cache,
                         )
                     print(
                         "Successfully updated added task "
@@ -189,7 +243,10 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
                 else:
                     doist_parent_id = None
                     updateDoIstTask(
-                        page, reformatUpdatePages.reformatted[page], doist_parent_id
+                        page,
+                        reformatUpdatePages.reformatted[page],
+                        doist_parent_id,
+                        add_to_doist_cache,
                     )
                     print(
                         "Successfully updated task "
@@ -215,13 +272,19 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
         if page in last_sync_copy:
             del last_sync_pages[page]
 
+    # TODO: this doesnt work
     for page in last_sync_pages:
         print("Successfully deleted task " + last_sync_pages[page]["Name"])
-        deleteDoIstTask(last_sync_pages[page])
+        deleteDoIstTask(last_sync_pages[page], add_to_doist_cache)
         del cache_pages[page]
 
-    with open(os.getcwd() + "/test/notionPage.json", "w") as f:
-        cache_pages.update(reformatUpdatePages.reformatted)
-        json.dump(cache_pages, f)
+    # with open(os.getcwd() + "/test/notionPage.json", "w") as f:
+    #     cache_pages.update(reformatUpdatePages.reformatted)
+    #     json.dump(cache_pages, f)
+    #     f.close()
+    #     print("Cache Pages found. Adding updated pages to the updated pages cache.")
+
+    with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
+        json.dump(add_to_doist_cache, f)
         f.close()
         print("Cache Pages found. Adding updated pages to the updated pages cache.")

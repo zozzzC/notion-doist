@@ -4,6 +4,7 @@ from typing import Any, cast
 from src.notion.types.NotionTypes import NotionPropsType
 from src.notion.types.PagesTypes import PagesType
 from typing import Dict
+from datetime import datetime, timedelta
 
 
 class ReformatPages:
@@ -20,15 +21,35 @@ class ReformatPages:
 
         date = None
         if page["Date"]["date"] != None:
-            start_date = page["Date"]["date"]["start"]
-            end_date = page["Date"]["date"]["end"]
+            start_date = (
+                datetime.fromisoformat(page["Date"]["date"]["start"])
+                + timedelta(days=1)
+            ).isoformat()
+
+            end_date = None
+
+            if page["Date"]["date"]["end"] != None:
+                end_date = (
+                    datetime.fromisoformat(page["Date"]["date"]["end"])
+                    + timedelta(days=1)
+                ).isoformat()
             date = {"end": end_date, "start": start_date}
 
         deadline = None
 
         if page["Deadline"]["date"] != None:
-            deadline_start_date = page["Deadline"]["date"]["start"]
-            deadline_end_date = page["Deadline"]["date"]["end"]
+            deadline_start_date = (
+                datetime.fromisoformat(page["Deadline"]["date"]["start"])
+                + timedelta(days=1)
+            ).isoformat()
+
+            deadline_end_date = None
+
+            if page["Deadline"]["date"]["end"] != None:
+                deadline_end_date = (
+                    datetime.fromisoformat(page["Deadline"]["date"]["end"])
+                    + timedelta(days=1)
+                ).isoformat()
             deadline = {
                 "end": deadline_end_date,
                 "start": deadline_start_date,
@@ -56,8 +77,6 @@ class ReformatPages:
         if len(notion_parent) != 0:
             parent_id = notion_parent[0]["id"]
 
-        pprint(page)
-
         notion_priority_level = page["Priority Level"]["select"]
         priority_level = notion_priority_level
 
@@ -79,6 +98,10 @@ class ReformatPages:
         toDoIst_id = None
         if len(page["ToDoistId"]["rich_text"]) != 0:
             toDoIst_id = page["ToDoistId"]["rich_text"][0]["plain_text"]
+
+        pprint(date)
+
+        pprint(deadline)
 
         self.reformatted.update(
             {
