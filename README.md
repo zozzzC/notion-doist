@@ -37,6 +37,7 @@ Setup (Important):
 - Get your [Notion database ID](https://stackoverflow.com/questions/67728038/where-to-find-database-id-for-my-database-in-notion) and store in the notion_db_id field.
 - [Create an API key](https://www.todoist.com/help/articles/find-your-api-token-Jpzx9IIlB) with Todoist and store the API secret in the todoist_token field.
 - [ Find your timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) and paste the string into the timezone field. (Use the 'TZ identifier' string. EG: If my timezone is +00:00, I would use 'Africa/Abidjan' as the timezone string.)
+- Go to the working directory and run ``pip install -r requirements.txt`` in the terminal. 
 - When finished, simply run main.py.
 
 ---
