@@ -34,7 +34,7 @@ Setup (Important):
 - [Create an API key with Notion](https://developers.notion.com/docs/create-a-notion-integration) and store the API secret in the notion_token field.
   - Connect the API with your Notion database by going under Connections. Allow the API to read and write.
 - Get your Notion database URL and store in the notion_db_url field.
-- Get your [Notion database ID](https://stackoverflow.com/questions/67728038/where-to-find-database-id-for-my-database-in-notion) and store in the noiton_db_id field.
+- Get your [Notion database ID](https://stackoverflow.com/questions/67728038/where-to-find-database-id-for-my-database-in-notion) and store in the notion_db_id field.
 - [Create an API key](https://www.todoist.com/help/articles/find-your-api-token-Jpzx9IIlB) with Todoist and store the API secret in the todoist_token field.
 - [ Find your timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) and paste the string into the timezone field. (Use the 'TZ identifier' string. EG: If my timezone is +00:00, I would use 'Africa/Abidjan' as the timezone string.)
 - When finished, simply run main.py.
