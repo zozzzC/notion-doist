@@ -2,7 +2,7 @@
 
 A Python script that 2-way syncs your Notion and Todoist tasks and pages.
 
---
+---
 
 Features:
 
@@ -11,12 +11,12 @@ Features:
 - Projects and Sections are created and synced between Notion and Todoist.
 - Support for deleted and completed tasks/pages.
 
---
+---
 
 Setup (Important):
 
 - Your Notion database must look like this (case sensitive):
-- ![[Pasted image 20250709120305.png]]
+- <img width="2218" alt="image" src="https://github.com/user-attachments/assets/b140aee5-d352-4be0-8482-0ee19479236b" />
 - Fields:
   - Done (Checkbox)
   - Name (Title)
@@ -39,7 +39,7 @@ Setup (Important):
 - [ Find your timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) and paste the string into the timezone field. (Use the 'TZ identifier' string. EG: If my timezone is +00:00, I would use 'Africa/Abidjan' as the timezone string.)
 - When finished, simply run main.py.
 
---
+---
 
 Known Limitations:
 
