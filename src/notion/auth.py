@@ -9,6 +9,7 @@ def notionAuth() -> Client:
         with open(("config.json"), "r") as file:
             config_data = json.load(file)
             notion = Client(auth=config_data["notion_token"])
+            file.close()
             return notion
     except:
         print("Notion Token was not initialized.")

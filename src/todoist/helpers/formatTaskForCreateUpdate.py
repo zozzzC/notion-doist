@@ -23,10 +23,10 @@ def formatTaskForCreateUpdate(
 
     start_date = None
     end_date = None
-    # TODO: use dynamic timezone
 
     with open("config.json", "r") as f:
         config_data = json.load(f)
+        f.close()
 
     time_zone = config_data["timezone"]
 

@@ -11,23 +11,27 @@ from todoist.syncTasks import syncTasks
 import json
 import os
 from verifyConfig import verifyConfig
+from getDefaultPath import getDefaultPath
 
 
 def main():
     verifyConfig()
     client = notionAuth()
     api = doIstAuth()
+    default_path = getDefaultPath()
     try:
-        with open((os.getcwd() + "/test/doIstTask.json"), "r") as file:
+        with open((default_path + "doIstTask.json"), "r") as file:
             data = json.load(file)
+            file.close()
     except:
         print("Error reading Todoist Cache.")
 
     syncTasks(api, data)
 
     try:
-        with open((os.getcwd() + "/test/notionPage.json"), "r") as file:
+        with open((default_path + "notionPage.json"), "r") as file:
             data = json.load(file)
+            file.close()
     except:
         print("Error reading Notion cache.")
 

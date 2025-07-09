@@ -8,6 +8,7 @@ def checkInNotion(todoistId: str):
     client = notionAuth()
     with open(("config.json"), "r") as file:
         config_data = json.load(file)
+        file.close()
 
     page = client.databases.query(
         **{

@@ -10,25 +10,25 @@ def lookupPageByTodoistId(todoistId: str):
     client = notionAuth()
     with open(("config.json"), "r") as file:
         config_data = json.load(file)
-
-    # try:
-    res = getProperties(
-        getResults(
-            client.databases.query(
-                **{
-                    "database_id": config_data["notion_db_id"],
-                    "filter": {
-                        "property": "ToDoistId",
-                        "rich_text": {"contains": todoistId},
-                    },
-                }
+        file.close()
+    try:
+        res = getProperties(
+            getResults(
+                client.databases.query(
+                    **{
+                        "database_id": config_data["notion_db_id"],
+                        "filter": {
+                            "property": "ToDoistId",
+                            "rich_text": {"contains": todoistId},
+                        },
+                    }
+                )
             )
         )
-    )
 
-    if len(list(res.keys())) == 0:
-        return None
+        if len(list(res.keys())) == 0:
+            return None
 
-    return list(res.keys())[0]
-    # except IndexError:
-    #     raise Exception("Cannot find page with Todoist ID " + todoistId)
+        return list(res.keys())[0]
+    except IndexError:
+        raise Exception("Cannot find page with Todoist ID " + todoistId)

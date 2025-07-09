@@ -11,15 +11,17 @@ config_schema = {
         "notion_db_id": {"type": "string"},
         "notion_db_url": {"type": "string"},
         "timezone": {"type": "string"},
+        "default_path": {"type": ["string", "null"]},
     },
     "additionalProperties": False,
-    "minProperties": 6,
+    "minProperties": 7,
 }
 
 
 def verifyConfig():
     with open("config.json", "r") as f:
         config_data = json.load(f)
+        f.close()
 
     try:
         validate(instance=config_data, schema=config_schema)

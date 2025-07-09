@@ -21,6 +21,7 @@ from src.todoist.helpers.changeTimezone import changeTimezone
 from pprint import pprint
 from typing import Dict
 from src.todoist.helpers.ReformatTasks import TasksType, TaskPropsType
+from getDefaultPath import getDefaultPath
 
 
 def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
@@ -29,6 +30,7 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
 
     with open(("config.json"), "r") as file:
         config_data = json.load(file)
+        file.close()
 
     new_pages: SyncAsync[Any] = client.databases.query(
         **{
@@ -47,10 +49,13 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
 
     with open("config.json", "r") as f:
         config_data = json.load(f)
+        f.close()
 
     # get all the new pages and add them into todoist. then we get the todoist id back and store this into the associated notion page.
 
-    with open(os.getcwd() + "/test/doIstTask.json", "r") as f:
+    default_path = getDefaultPath()
+
+    with open(default_path + "doIstTask.json", "r") as f:
         old_to_doist_cache: TasksType = json.load(f)
         f.close()
     add_to_doist_cache: TasksType = old_to_doist_cache.copy()
@@ -100,6 +105,7 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
 
     with open("config.json", "r") as f:
         config_sync = json.load(f)
+        f.close()
 
     config_sync["last_sync"] = changeTimezone(
         datetime.now()
@@ -165,7 +171,7 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
             )
 
     # TODO: cache is not being saved properly.
-    with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
+    with open(default_path + "doIstTask.json", "w") as f:
         json.dump(add_to_doist_cache, f)
         f.close()
         print("Updated Todoist Cache with newly added Notion pages.")
@@ -173,18 +179,18 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
     # if there is no notion cache (dict is empty), then we have to add all into ticktick first, otherwise, we add it back again to the existing cache.
     if len(cache_pages) == 0:
         # TODO: cache isnt beign saved porperly
-        with open(os.getcwd() + "/test/notionPage.json", "r") as f:
+        with open(default_path + "notionPage.json", "r") as f:
             cache_pages = json.load(f)
             cache_pages.update(reformatNewPages.reformatted)
             cache_pages.update(reformatUpdatePages.reformatted)
             f.close()
-        with open(os.getcwd() + "/test/notionPage.json", "w") as f:
+        with open(default_path + "notionPage.json", "w") as f:
             json.dump(cache_pages, f)
             f.close()
         return
     # if there IS a notion cache, we want to combine the notion cache and reformatNewPages.
     else:
-        with open(os.getcwd() + "/test/notionPage.json", "w") as f:
+        with open(default_path + "notionPage.json", "w") as f:
             cache_pages.update(reformatNewPages.reformatted)
             json.dump(cache_pages, f)
             f.close()
@@ -278,13 +284,7 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
         deleteDoIstTask(last_sync_pages[page], add_to_doist_cache)
         del cache_pages[page]
 
-    # with open(os.getcwd() + "/test/notionPage.json", "w") as f:
-    #     cache_pages.update(reformatUpdatePages.reformatted)
-    #     json.dump(cache_pages, f)
-    #     f.close()
-    #     print("Cache Pages found. Adding updated pages to the updated pages cache.")
-
-    with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
+    with open(default_path + "doIstTask.json", "w") as f:
         json.dump(add_to_doist_cache, f)
         f.close()
         print("Cache Pages found. Adding updated pages to the updated pages cache.")

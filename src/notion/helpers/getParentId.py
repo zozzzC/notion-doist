@@ -19,6 +19,7 @@ def getParentId(
     client = notionAuth()
     with open(("config.json"), "r") as file:
         config_data = json.load(file)
+        file.close()
 
     pagesWithDoistId = client.databases.query(
         **{

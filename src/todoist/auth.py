@@ -8,6 +8,7 @@ def doIstAuth() -> TodoistAPI:
     try:
         with open(("config.json"), "r") as file:
             config_data = json.load(file)
+            file.close()
         api = TodoistAPI(config_data["todoist_token"])
         return api
     except:

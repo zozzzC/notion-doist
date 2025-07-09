@@ -24,6 +24,7 @@ from datetime import date, datetime, timedelta
 from src.todoist.helpers.completeNotionPage import completeNotionPage
 from src.todoist.helpers.changeTimezone import changeTimezone
 from src.todoist.helpers.formatTaskForCreateUpdate import formatTaskForCreateUpdate
+from getDefaultPath import getDefaultPath
 
 
 def syncTasks(api: TodoistAPI, data: any):
@@ -40,11 +41,14 @@ def syncTasks(api: TodoistAPI, data: any):
     # this queue takes in the tasks that require relations but do not have a parent id in notion to refer to yet
     require_relations: Queue[TaskPropsType] = Queue()
 
-    with open(os.getcwd() + "/test/doIstTask.json", "r") as f:
+    default_path = getDefaultPath()
+
+    with open(default_path + "doIstTask.json", "r") as f:
         cache_tasks: TasksType = json.load(f)
+        f.close()
 
     if len(data) == 0:
-        with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
+        with open(default_path + "doIstTask.json", "w") as f:
             print("Saving doIst tasks...")
             json.dump(new_tasks.reformatted, f)
             f.close()
@@ -101,7 +105,7 @@ def syncTasks(api: TodoistAPI, data: any):
             # remove this from notion cache
     checkForRelation(reformatted_relation_tasks.reformatted)
 
-    with open(os.getcwd() + "/test/doIstTask.json", "w") as f:
+    with open(default_path + "doIstTask.json", "w") as f:
         print("Saving doIst tasks...")
         json.dump(new_tasks.reformatted, f)
         f.close()

@@ -85,6 +85,7 @@ def createNotionPage(
 
     with open(("config.json"), "r") as file:
         config_data = json.load(file)
+        file.close()
 
     client.pages.create(
         parent={"database_id": config_data["notion_db_id"]}, properties=create
