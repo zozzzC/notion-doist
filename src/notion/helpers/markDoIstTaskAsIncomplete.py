@@ -1,6 +1,8 @@
 from src.todoist.auth import doIstAuth
 from src.todoist.helpers.ReformatTasks import TasksType, TaskPropsType
 from src.notion.types.PagesTypes import PagesType
+from src.notion.helpers.lookupPageByTodoistId import lookupPageByTodoistId
+from src.todoist.helpers.markNotionPageAsIncomplete import markNotionPageAsIncomplete
 
 
 def markDoIstTaskAsIncomplete(
@@ -42,3 +44,17 @@ def markDoIstTaskAsIncomplete(
         "due": due,
         "recurring": recurring,
     }
+
+    # if we are a child task, then the parent tasks will also be marked as incomplete. in that case, we must:
+    # add the parent task into the add_to_doist_cache dict
+    # change this accordingly in notion
+
+    parent_id = task.parent_id
+
+    if parent_id != None:
+        markDoIstTaskAsIncomplete(
+            lookupPageByTodoistId(parent_id), parent_id, add_to_doist_cache
+        )
+        markNotionPageAsIncomplete(
+            lookupPageByTodoistId(parent_id)
+        )  # mark the parent as incomplete in notion

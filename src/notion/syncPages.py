@@ -170,7 +170,6 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
                 "Successfully added task " + reformatNewPages.reformatted[page]["Name"]
             )
 
-    # TODO: cache is not being saved properly.
     with open(default_path + "doIstTask.json", "w") as f:
         json.dump(add_to_doist_cache, f)
         f.close()
@@ -178,7 +177,6 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
 
     # if there is no notion cache (dict is empty), then we have to add all into ticktick first, otherwise, we add it back again to the existing cache.
     if len(cache_pages) == 0:
-        # TODO: cache isnt beign saved porperly
         with open(default_path + "notionPage.json", "r") as f:
             cache_pages = json.load(f)
             cache_pages.update(reformatNewPages.reformatted)
@@ -203,6 +201,7 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
 
         # there may be a case where the task was synced but was marked as complete then marked as uncomplete, in that case we want to un-complete the task, but by then task does not exist in the notion cache anymore. so we have to add it back into cache.
         if page not in cache_pages:
+            # TODO: if we mark a todoist CHILD task as incomplete, then its parent tasks will also be marked as incomplete. 
             markDoIstTaskAsIncomplete(
                 page,
                 reformatUpdatePages.reformatted[page]["ToDoistId"],
@@ -213,8 +212,6 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
             continue
 
         cache_page = cache_pages[page]
-
-        # TODO if the task has a parent id, and the parent id is marked as complete, then we simply SKIP the task, since the child task would be marked as complete by todoist.
 
         # now loop through the properties.
 
@@ -242,10 +239,10 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
                             doist_parent_id,
                             add_to_doist_cache,
                         )
-                    print(
-                        "Successfully updated added task "
-                        + reformatUpdatePages.reformatted[page]["Name"]
-                    )
+                        print(
+                            "Successfully updated added task "
+                            + reformatUpdatePages.reformatted[page]["Name"]
+                        )
                 else:
                     doist_parent_id = None
                     updateDoIstTask(
