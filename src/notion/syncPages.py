@@ -279,10 +279,10 @@ def syncPages(client: Client, cache_pages: Dict[str, PagesType]):
             del last_sync_pages[page]
 
     # TODO: this doesnt work
-    for page in last_sync_pages:
-        print("Successfully deleted task " + last_sync_pages[page]["Name"])
-        deleteDoIstTask(last_sync_pages[page], add_to_doist_cache)
-        del cache_pages[page]
+    # for page in last_sync_pages:
+    #     print("Successfully deleted task " + last_sync_pages[page]["Name"])
+    #     deleteDoIstTask(last_sync_pages[page], add_to_doist_cache)
+    #     del cache_pages[page]
 
     with open(default_path + "doIstTask.json", "w") as f:
         json.dump(add_to_doist_cache, f)

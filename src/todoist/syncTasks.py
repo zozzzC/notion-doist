@@ -99,10 +99,10 @@ def syncTasks(api: TodoistAPI, data: any):
             print("Task " + cache_tasks[ct].get("content") + " was completed.")
             completeTaskInNotion(ct)
             # remove this from notion cache
-        elif ct not in new_tasks.reformatted:
-            print("Task " + cache_tasks[ct].get("content") + " was deleted.")
-            deleteTaskInNotion(ct)
-            # remove this from notion cache
+        # elif ct not in new_tasks.reformatted:
+        #     print("Task " + cache_tasks[ct].get("content") + " was deleted.")
+        #     deleteTaskInNotion(ct)
+        # remove this from notion cache
     checkForRelation(reformatted_relation_tasks.reformatted)
 
     with open(default_path + "doIstTask.json", "w") as f:
