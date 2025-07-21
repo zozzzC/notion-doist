@@ -30,7 +30,7 @@ Setup (Important):
   - ToDoistId (Rich Text)
   - Parent (**Two Way Relation** to the same database)
   - Child (**Two Way Relation** to the same database -- this is related to Parent.)
-- In the main directory, change config.example.json to config.example. We will now configure our files.
+- In the main directory, change config.example.json to config.json . We will now configure our files.
 - [Create an API key with Notion](https://developers.notion.com/docs/create-a-notion-integration) and store the API secret in the notion_token field.
   - Connect the API with your Notion database by going under Connections. Allow the API to read and write.
 - Get your Notion database URL and store in the notion_db_url field.
