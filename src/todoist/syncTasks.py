@@ -14,7 +14,7 @@ from src.todoist.helpers.createNotionPage import createNotionPage
 from src.todoist.helpers.lookupProject import lookupProject
 from src.todoist.helpers.lookupSection import lookupSection
 from src.todoist.helpers.calculateEndDate import calculateEndDate
-from .helpers.getProperties import getProperties, getResults
+from todoist.helpers.getProperties import getProperties, getResults
 from pprint import pprint
 from dotenv import load_dotenv
 from todoist.helpers.formatToDoIstDateTime import formatToDoIstDateTime
