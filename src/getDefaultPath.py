@@ -1,7 +1,6 @@
 import json
 import os
 
-
 def getDefaultPath():
     with open("config.json", "r") as f:
         config_data = json.load(f)
